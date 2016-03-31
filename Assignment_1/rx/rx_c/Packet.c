@@ -6,7 +6,10 @@
 
 #ifndef Packet_h
 #define Packet_h
+#include <stdlib.h>
 
+#include <stdlib.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 typedef struct{
