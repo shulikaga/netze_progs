@@ -6,6 +6,7 @@
 #define Transmit_h
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #endif /* Transmit_h */
 
@@ -25,8 +26,7 @@ char buffer[1024];
 
 
 
-int getNumberOfPackets(char[] *strNumber){
-    int number = atoi(strNumber);
+int getNumberOfPackets(int number){
     if(number!=0){
         return number;
     }else{
@@ -42,7 +42,7 @@ void setSocketAddress(){
     
     /*Configure settings in address struct*/
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(7891);
+    serverAddr.sin_port = htons(4712);
     serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
     
@@ -53,38 +53,33 @@ void setSocketAddress(){
 void buildPacket(int packetNumber){
    
     //sequentialNr in bytes
-    buffer[0] = (n >> 24) & 0xFF;
-    buffer[1] = (n >> 16) & 0xFF;
-    buffer[2] = (n >> 8) & 0xFF;
-    buffer[3] = n & 0xFF;
-    
-    int i;
-    char** message = "- Message.";
-    //message in bytes
-    for(i = 4;i<message.length;i++){
-        buffer[i] = message[i-4];
-    }
+    buffer[0] = (packetNumber >> 24) & 0xFF;
+    buffer[1] = (packetNumber >> 16) & 0xFF;
+    buffer[2] = (packetNumber >> 8) & 0xFF;
+    buffer[3] = packetNumber & 0xFF;
+    buffer[4] = 'M';
+    buffer[5] = 'e';
+    buffer[6] = 's';
+    buffer[7] = 's';
+    buffer[8] = 'a';
+    buffer[9] = 'g';
+    buffer[10] = 'e';
     
 }
 
 void sendPackets(int numberOfPackets){
-    int packetNumber = 0;
-    //long timeFirstSent = 0;
-    //int isNotMeasured = 1;
-   
-    
-    while(packetNumber < numberOfPackets){
-        printf("UPD lauft...");
+    int packetNumber = 1;
+    printf("UPD lauft...\n");
+    while(packetNumber <= numberOfPackets){
+       
         buildPacket(packetNumber);//typing a message
-        
-        nBytes = strlen(buffer) + 1;
         
         sendto(clientSocket,buffer,nBytes,0,(struct sockaddr *)&serverAddr,addr_size);
         
         packetNumber++;
     }
+    printf("%d have been sent to port %d %\n",packetNumber-1, serverAddr.sin_port);
     
-    System.out.println("UDP laeuft...");
 }
 
 
@@ -93,7 +88,7 @@ int main(int argc, char *argv[]){
     
      setSocketAddress();
 
-     sendPackets(getNumberOfPackets(args[1]));
+     sendPackets(atoi(argv[1]));
     
     close(clientSocket);
 

@@ -31,7 +31,9 @@ public class Receive_Java{
 			try {
 			    
 				while (i < MAX_NUMBER_OF_PACKETS_TO_BE_RECEIVED) {// waiting to receive a datagram
+					System.out.println("------------------------------------------");
 					System.out.println("Server is waiting for incoming datagram...");
+					System.out.println("------------------------------------------");
 
 					// create paket container for receiving data
 					DatagramPacket incomingDPacket = new DatagramPacket(new byte[1024], 1024); 
@@ -73,12 +75,12 @@ public class Receive_Java{
 		int port = incomingDPacket.getPort();
 		int len = incomingDPacket.getLength();
 		
-		System.out.println("RX received new DatagramPacket from " + port);
-		System.out.println("Number of Received DatagramPackets: " + nmbOfReceivedDPackets);
-		//System.out.println("Sequence Number: " + packet.getSeqNr());
-		//System.out.println("Message: " + packet.getMessage());
+		System.out.println("--> " + nmbOfReceivedDPackets + " th DatagramPacket received from " + port);
+	    System.out.println("Sequence Number: " + packet.getReceivedSeqNr());
+	    System.out.println("Message:         " + packet.getMessage());
 
-        System.out.println("Address: " + incomingDPacket.getAddress() + "\n" + "Port:  " + port + "\n" + "Length:  " + len);
+        System.out.println("Address:         " + incomingDPacket.getAddress()) ;
+        		//+ "\n" + "Port:  " + port + "\n" + "Length:  " + len);
 				//+ " byte\n" + "Sending time interval: "
 				//+ (packet.getTimeReceived() - packet.getTimeSent()) + "ms\n");
 	}
