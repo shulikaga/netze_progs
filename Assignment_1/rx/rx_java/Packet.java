@@ -1,3 +1,5 @@
+import java.net.DatagramPacket;
+
 //import java.io.Serializable;
 
 public class Packet{// implements Serializable{
@@ -19,6 +21,20 @@ public class Packet{// implements Serializable{
         this.receivedSeqNr = receivedSeqNr;
         this.data = data;
         this.timeReceived = timeReceived;
+        this.sentSeqNr = getSentSeqNr(data);
+	}
+
+
+
+	private int getSentSeqNr(byte[] data2) {
+		byte[] seqNmbInBytes = new byte[4];
+		System.arraycopy(data2, 0, seqNmbInBytes, 0, 4);
+
+		return toInt(seqNmbInBytes);
+	}
+
+	private static int toInt(byte[] b) {
+		return b[3] & 0xFF | (b[2] & 0xFF) << 8 | (b[1] & 0xFF) << 16 | (b[0] & 0xFF) << 24;
 	}
 
 
@@ -38,7 +54,9 @@ public class Packet{// implements Serializable{
 		return receivedSeqNr;
 	}
 
-    
+    public int getSentSeqNr(){
+    	return sentSeqNr;
+    }
 
 	public String getMessage() {
 		return message;

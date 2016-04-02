@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -18,55 +19,103 @@ import java.util.List;
 
 public class Receive_Java{
 
-	public static void main(String args[]) throws ClassNotFoundException, SocketException {
+	public static void main(String args[]) throws ClassNotFoundException, IOException {
 		
-			final int MAX_NUMBER_OF_PACKETS_TO_BE_RECEIVED = Integer.parseInt(args[0]);
-			long timeFirstReceived = 0;
-			List<Packet> packets = new ArrayList<>();// to save all the datagrams
-			DatagramSocket server = new DatagramSocket(4712);
-			
-			long timeLastReceived = 0;
-			int i = 0;
-			
+		//final int MAX_NUMBER_OF_PACKETS_TO_BE_RECEIVED = Integer.parseInt(args[0]);
+		long timeFirstReceived = 0;
+		List<Packet> packets = new ArrayList<>();// to save all the received packets
+		BitSet bitSetReceived = new BitSet(1024); 
+		int sourceport;
+		DatagramSocket server = new DatagramSocket(4712);
+		
+		System.out.println("------------------------------------------");
+		System.out.println("Server is waiting for first datagram...");
+		System.out.println("------------------------------------------");
+		
+		// create paket container for receiving data
+		DatagramPacket incomingDPacket = new DatagramPacket(new byte[1024], 1024);
+		
+		// wait and receive Data
+		server.receive(incomingDPacket);
+		
+		// received time measuring
+		long timeReceived = System.currentTimeMillis();
+		timeFirstReceived = timeReceived;
+		
+		int i = 0;
+		byte[] data1 = incomingDPacket.getData();
+		
+		Packet packet = new Packet(i, data1, timeReceived); // getPacketObject(incomingDPacket);
+		packets.add(packet);
+		
+		// set port from where the DPackets are coming
+		sourceport = incomingDPacket.getPort();
+		
+		// set server Socket timeout.
+		server.setSoTimeout(1000);
+		
+		long timeLastReceived = timeReceived;
+		
+		// set bitSetReceived
+		bitSetReceived.set(i);
+		
+		int nmbOfWaitingCircles = 5;
+		
+		i++;
+		while (nmbOfWaitingCircles > 0) {// waiting to receive
+															// a datagram
+			System.out.println("------------------------------------------");
+			System.out.println("Server is waiting for incoming datagram...");
+			System.out.println("------------------------------------------");
+
 			try {
-			    
-				while (i < MAX_NUMBER_OF_PACKETS_TO_BE_RECEIVED) {// waiting to receive a datagram
-					System.out.println("------------------------------------------");
-					System.out.println("Server is waiting for incoming datagram...");
-					System.out.println("------------------------------------------");
+				// wait and receive Data
+				server.receive(incomingDPacket);
+				
+				// reset waiting circles
+				nmbOfWaitingCircles = 5;
+				
+				// received time measuring
+				timeReceived = System.currentTimeMillis();
+				timeLastReceived = timeReceived;
 
-					// create paket container for receiving data
-					DatagramPacket incomingDPacket = new DatagramPacket(new byte[1024], 1024); 
-					
-					// wait and receive Data
-					server.receive(incomingDPacket);
-					
-					// received time measuring
-					long timeReceived = System.currentTimeMillis();
-					if (timeFirstReceived == 0) timeFirstReceived = timeReceived;
-					timeLastReceived = timeReceived;
-					
-                    byte[] data = incomingDPacket.getData();
+				byte[] data = incomingDPacket.getData();
 
-					// extract first 4 bytes of the DatagramPacket (this is not the sequence number
-					// that is stored in the "packet"-Object. Of course, the two numbers
-					// should be equal, because they were initially copied)
-					//int seqNr = getSequenceNumber(incomingDPacket); // not in use
-                    Packet packet = new Packet(i, data, timeReceived);//getPacketObject(incomingDPacket);
-					
-					
-					// add to list
-					packets.add(packet);
-					
-					// print send/receive-info
-					print(incomingDPacket, packet, i + 1);
-					
-					i++;
-				}
+				// extract first 4 bytes of the DatagramPacket (this is not the
+				// sequence number
+				// that is stored in the "packet"-Object. Of course, the two
+				// numbers
+				// should be equal, because they were initially copied)
+				// int seqNr = getSequenceNumber(incomingDPacket); // not in use
+				packet = new Packet(i, data, timeReceived);// getPacketObject(incomingDPacket);
 
-			} catch (Exception e) {
-				System.out.println(e);
+				// add to list
+				packets.add(packet);
+
+				// set bitSetReceived
+				bitSetReceived.set(packet.getSentSeqNr());
+				
+				// print send/receive-info
+				print(incomingDPacket, packet, i + 1);
+
+				i++;
+			} catch (SocketTimeoutException e) {
+				// send bitset back to sender
+				byte[] message = new byte[1024];
+				message = bitSetReceived.toByteArray();
+				DatagramPacket answer = new DatagramPacket(message, message.length, incomingDPacket.getAddress(), sourceport);
+				server.send(answer);
+				
+				boolean packetsMissing = false;
+	    		for (int i1 = 0; i1 < bitSetReceived.length() && !packetsMissing; i1++){
+	    			if (!bitSetReceived.get(i1)) {packetsMissing = true;}
+	    		}
+	    		if (!packetsMissing) bitSetReceived = new BitSet(1024); //todo: if last backmassage of a block gets lost--> problem
+				
+				nmbOfWaitingCircles--;
+				continue;
 			}
+		}
 
 			System.out.println("Time " + i + " datagrams received: " + (timeLastReceived - timeFirstReceived) + "ms");
 	}
