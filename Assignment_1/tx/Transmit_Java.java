@@ -2,8 +2,12 @@
  * Transmit_Java.java
  *
  * this program sends a number of datagrampackets via udp to a specified
- * internet adress and port. It puts as the first 4 bytes a sequence number,
- * and from there it puts a package-object.
+ * internet adress and port in blocks of 1024 packets. It puts as the first 4 bytes
+ *  a sequence number and from there it puts the message.
+ *  After sending a block, it waits for a bitmap of size 1024 bits. If the n-th
+ *  bit is true, the transfer of the n-th datagrampacket was successfull. After the
+ *  block is tranfered completely i.e. the bitmap is all true, it sends the next 
+ *  block in the same way.
  *
  *@author Matthias Reichinger, Ganna Shulika
  */
@@ -19,12 +23,44 @@ public class Transmit_Java{
    
     final static int SEQ_NR_BYTE_LENGTH = 4;
     
+    public static void main(String args[])throws IOException, UnknownHostException{
+        DatagramSocket socket = new DatagramSocket();
+        
+        int numberOfPackets = getNumberOfPackets(args[0]);
+        boolean[] bitMapReceived = new boolean[1024];
+        int blockNumber = 0;
+        int numberOfBlocks = (int) Math.ceil(numberOfPackets/1024.0);
+        
+        while (blockNumber < numberOfBlocks){
+        	sendPackets(socket, numberOfPackets, bitMapReceived, blockNumber);
+        	
+    		DatagramPacket incomingDPacket = new DatagramPacket(new byte[128], 128);
+    		//System.out.println("Warte auf Antwort vom Server...");
+    		socket.receive(incomingDPacket);
+    		//System.out.println("--> Bitmap zurück erhalten"); 
+    		bitMapReceived = toBooleanArray(incomingDPacket.getData());
+    		
+    		// check if all packets of block sent successfully
+    		boolean packetsComplete = true;
+    		int nmbPacketsInBlock;
+    		if (numberOfBlocks == blockNumber+1) {nmbPacketsInBlock = numberOfPackets-((numberOfBlocks-1)*1024);}
+    		else {nmbPacketsInBlock = 1024;}
+    		for (int i = 0; i < nmbPacketsInBlock && packetsComplete; i++){
+    			if (!bitMapReceived[i]) {packetsComplete = false;}
+    		}
+    		if (packetsComplete) {
+    			blockNumber++;
+    			System.out.println("-----------------block " + blockNumber + " ---------------------");
+    		}
+        }
+        socket.close(); 
+    }
+    
     
     private static DatagramPacket buildPacket(int packetNumber) throws UnknownHostException{
     	 InetAddress inetAddress = InetAddress.getByName("127.0.0.1");
     	 int port = 4712;
 
-        
         byte[] sequentialNr = ByteBuffer.allocate(SEQ_NR_BYTE_LENGTH).putInt(packetNumber).array();
         
         String str ="- Message";
@@ -37,43 +73,34 @@ public class Transmit_Java{
         return new DatagramPacket(packet, packet.length, inetAddress, port);
     }
     
-    																						// the 0st, 1st, 2nd, ... (one block = 1024 packets)
-    private static boolean sendPackets(DatagramSocket socket, int numberOfPackets, BitSet bitSetReceived, int blockNumber)throws IOException{
+    																						
+    private static void sendPackets(DatagramSocket socket, int numberOfPackets, boolean[] bitMapReceived, int blockNumber)throws IOException{
         
         int packetNumber = blockNumber * 1024;
         int startingPacketNumber = packetNumber;
         long timeFirstSent = 0;
-        boolean isTimeFirstSent = true;
         boolean isNotMeasured = true;
-        boolean sentAtLeastOnePacket = false; // todo: redundant glaub ich. weggeben, braucht man nicht mehr
+        int nmbOfSentPackets = 0;
         
-        System.out.println("UDP laeuft...");
         try{
         	while (packetNumber < startingPacketNumber + 1024 && packetNumber < numberOfPackets){
         		
-				if (!bitSetReceived.get(packetNumber % 1024)) {
+				if (! bitMapReceived[packetNumber % 1024]) {
 					DatagramPacket packet = buildPacket(packetNumber);
 					socket.send(packet);
-					sentAtLeastOnePacket = true;
-
+					nmbOfSentPackets++;
 					if (isNotMeasured) {
 						timeFirstSent = System.currentTimeMillis();
-						isTimeFirstSent = false;
 					}
 				}
         		packetNumber++;
         	}
-        	System.out.println(packetNumber + " datagrams have been sent.\n"+
-                            "Time the first datagram was sent = " + timeFirstSent + "ms.");
-         }	catch(UnknownHostException e){}
-        
-        return sentAtLeastOnePacket;
-        
+        	System.out.println(nmbOfSentPackets + " datagrams have been sent.");
+         }	catch(UnknownHostException e){}   			
     }
     
     
     private static int getNumberOfPackets(String strNumber){
-        
         if(strNumber.matches("-?\\d+(\\.\\d+)?")){
             return Integer.parseInt(strNumber);
         }else{
@@ -83,39 +110,25 @@ public class Transmit_Java{
         }
     }
     
+    static boolean[] toBooleanArray(byte[] bytes) {
+	    BitSet bits = BitSet.valueOf(bytes);
+	    boolean[] bools = new boolean[bytes.length * 8];
+	    for (int i = bits.nextSetBit(0); i != -1; i = bits.nextSetBit(i+1)) {
+	        bools[i] = true;
+	    }
+	    return bools;
+	}
 
-    public static void main(String args[])throws IOException, UnknownHostException{
-        
-        DatagramSocket socket = new DatagramSocket();
-        
-        int numberOfPackets = getNumberOfPackets(args[0]);
-        BitSet bitSetReceived = new BitSet(1024);
-        int blockNumber = 0;
-        int numberOfBlocks = (int) Math.ceil(numberOfPackets/1024.0);
-        
-        while (blockNumber < numberOfBlocks){
-        	
-        	sendPackets(socket, numberOfPackets, bitSetReceived, blockNumber );
-        	
-    		DatagramPacket incomingDPacket = new DatagramPacket(new byte[1024], 1024);
-    		System.out.println("Warte auf Datagram");
-    		socket.receive(incomingDPacket);
-    		System.out.println("Datagram zurück erhalten");
-    		bitSetReceived = BitSet.valueOf(incomingDPacket.getData());
-    		for (int i = 0; i < 1024; i++){
-    			System.out.print(bitSetReceived.get(i));
-    		}
-    		
-    		boolean packetsMissing = false;
-    		for (int i = 0; i < 1024 && !packetsMissing; i++){
-    			if (!bitSetReceived.get(i)) {packetsMissing = true;}
-    		}
-    		if (!packetsMissing) blockNumber++;
-        	
-        }
-        
-        socket.close();
-        
-    }
+	static byte[] toByteArray(boolean[] bools) {
+	    BitSet bits = new BitSet(bools.length);
+	    for (int i = 0; i < bools.length; i++) {
+	        if (bools[i]) {
+	            bits.set(i);
+	        }
+	    }
+	    return bits.toByteArray();
+	}
+
+
 
 }
