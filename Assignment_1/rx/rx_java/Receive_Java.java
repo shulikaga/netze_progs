@@ -23,6 +23,7 @@ import java.util.List;
  *
  */
 
+
 public class Receive_Java{
 
 	static int BLOCK_SIZE;
@@ -61,7 +62,9 @@ public class Receive_Java{
 		
 		// wait and receive first datagram
 		server.receive(incomingDPacket);
-		int countDPacketsReceived = 0;
+		int countReceivedTotally = 0;
+		@SuppressWarnings("unused")
+		int countReceivedThisSending = 0; 
 		
 		// received time measuring
 		long timeReceived = System.currentTimeMillis();
@@ -69,7 +72,7 @@ public class Receive_Java{
 		long timeLastReceived = timeReceived;
 		
 		// create packet an add it to the packetslist of this sending
-		Packet packet = new Packet(countDPacketsReceived, incomingDPacket.getData(), timeReceived);
+		Packet packet = new Packet(countReceivedTotally, incomingDPacket.getData(), timeReceived);
 		packets.add(packet);
 		
 		// set port from where the DPackets are coming
@@ -92,7 +95,8 @@ public class Receive_Java{
 			try {
 				// wait and receive Data
 				server.receive(incomingDPacket);
-				countDPacketsReceived++;
+				countReceivedTotally++;
+				countReceivedThisSending++;
 				
 				// reset waiting circles
 				nmbOfWaitingCircles = 5;
@@ -103,7 +107,7 @@ public class Receive_Java{
 				
 				// get packet and add to list
 				byte[] data = incomingDPacket.getData();
-				packet = new Packet(countDPacketsReceived, data, timeReceived);
+				packet = new Packet(countReceivedThisSending, data, timeReceived);
 				if (bitMapReceived[packet.getSentSeqNr() % BLOCK_SIZE] == false){
 					packets.add(packet);
 					bitMapReceived[packet.getSentSeqNr() % BLOCK_SIZE] = true;
@@ -113,10 +117,11 @@ public class Receive_Java{
 					sendings.add(packets);
 					packets.add(packet);
 					bitMapReceived = new boolean[BLOCK_SIZE];
-					bitMapReceived[packet.getSentSeqNr() % BLOCK_SIZE] = true;	
+					bitMapReceived[packet.getSentSeqNr() % BLOCK_SIZE] = true;
+					countReceivedThisSending = 0;
 				}
 				
-				print(incomingDPacket, packet, countDPacketsReceived + 1);
+				print(incomingDPacket, packet, countReceivedTotally + 1);
 			
 			} catch (SocketTimeoutException e) {
 				// send bitmap back to sender
@@ -138,7 +143,7 @@ public class Receive_Java{
 			}
 		}
 		server.close();
-		System.out.println(countDPacketsReceived+1 + " datagrams received: " + (timeLastReceived - timeFirstReceived) + "ms");
+		System.out.println(countReceivedTotally+1 + " datagrams received: " + (timeLastReceived - timeFirstReceived) + "ms");
 			
 	}
 
@@ -147,13 +152,13 @@ public class Receive_Java{
 		int len = incomingDPacket.getLength();
 		
 		System.out.println("--> " + nmbOfReceivedDPackets + " th DatagramPacket received from " + port);
-	    System.out.println("Received Sequence Number: " + packet.getReceivedSeqNr());
-	    System.out.println("Sent Sequence Number: " + packet.getSentSeqNr());
+	    System.out.println("Received Sequence Number in this sending: " + packet.getReceivedSeqNr());
+	    System.out.println("Sent Sequence Number in this sending: " + packet.getSentSeqNr());
 	    System.out.println("Message:         " + packet.getMessage());
 
-        System.out.println("Address:         " + incomingDPacket.getAddress()) ;
-        		//+ "\n" + "Port:  " + port + "\n" + "Length:  " + len);
-				//+ " byte\n" + "Sending time interval: "
+        System.out.println("Address:         " + incomingDPacket.getAddress()
+        		+ "\n" + "Port:  " + port + "\n" + "Length:  " + len
+				+ " byte\n" + "Sending time interval: ");
 				//+ (packet.getTimeReceived() - packet.getTimeSent()) + "ms\n");
 	}
 
