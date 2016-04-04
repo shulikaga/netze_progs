@@ -10,12 +10,12 @@ import java.util.List;
 
 /**
  * This program receives a number of datagrampackets lossless via udp 
- * in blocks of 1024 datagrampackets. It stores the packets and
+ * in blocks of BLOCK_SIZE datagrampackets. It stores the packets and
  * prints out the message, as well as the sequence number
  * of the received packets, their size, the time needed for
  * sending, etc.
  * After receiving a number of datagrampackets, it sends back a bitmap
- * of 1024 bits. It sets the n-th bit as true, if the n-th datagram in this
+ * of BLOCK_SIZE bits. It sets the n-th bit as true, if the n-th datagram in this
  * block was received. After the block is transfered completely i.e. the bitmap 
  * is all true, it waits and receives the next block the same way.
  * 
@@ -25,13 +25,16 @@ import java.util.List;
 
 public class Receive_Java{
 
+	static int BLOCK_SIZE;
+	
 	public static void main(String args[]) throws ClassNotFoundException, IOException {
 		
+		BLOCK_SIZE = Integer.parseInt(args[0]);
 		long timeFirstReceived = 0;
 		List<Packet> packets = new ArrayList<>();// to save all the received packets
-		// the Datagrams will be sent in blocks of 1024 datagrams. this bitmap reflects, if
+		// the Datagrams will be sent in blocks of BLOCK_SIZE datagrams. this bitmap reflects, if
 		// the n-th datagram is allready received "bitmapReceived[n] = true"
-		boolean[] bitMapReceived = new boolean[1024];
+		boolean[] bitMapReceived = new boolean[BLOCK_SIZE];
 		int sourceport; // where to send back the bitMapReceived
 		DatagramSocket server = new DatagramSocket(4712);
 		
@@ -40,7 +43,7 @@ public class Receive_Java{
 		System.out.println("------------------------------------------");
 		
 		// create paket container for receiving data
-		DatagramPacket incomingDPacket = new DatagramPacket(new byte[1024], 1024);
+		DatagramPacket incomingDPacket = new DatagramPacket(new byte[BLOCK_SIZE], BLOCK_SIZE);
 		
 		// wait and receive first datagram
 		server.receive(incomingDPacket);
@@ -58,7 +61,7 @@ public class Receive_Java{
 		sourceport = incomingDPacket.getPort();
 		
 		// set server Socket timeout.
-		server.setSoTimeout(10);
+		server.setSoTimeout(5);
 		
 		// set bitMapReceived
 		bitMapReceived[packet.getSentSeqNr()] = true;
@@ -89,7 +92,7 @@ public class Receive_Java{
 				packets.add(packet);
 
 				// set bitMapReceived
-				bitMapReceived[packet.getSentSeqNr() % 1024] = true;
+				bitMapReceived[packet.getSentSeqNr() % BLOCK_SIZE] = true;
 				// print send/receive-info
 				print(incomingDPacket, packet, countDPacketsReceived + 1);
 
@@ -102,11 +105,11 @@ public class Receive_Java{
 				
 				// check, if this block is complete
 				boolean packetsComplete = true;
-	    		for (int i1 = 0; i1 < 1024 && packetsComplete; i1++){
+	    		for (int i1 = 0; i1 < BLOCK_SIZE && packetsComplete; i1++){
 	    			if (!bitMapReceived[i1]) {packetsComplete = false;}
 	    		}
 	    		if (packetsComplete) {//todo: if last backmassage of a block gets lost--> problem
-	    			bitMapReceived = new boolean[1024];
+	    			bitMapReceived = new boolean[BLOCK_SIZE];
 	    		}
 				
 				nmbOfWaitingCircles--;

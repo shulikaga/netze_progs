@@ -2,7 +2,7 @@
  * Transmit_Java.java
  *
  * this program sends a number of datagrampackets via udp to a specified
- * internet adress and port in blocks of 1024 packets. It puts as the first 4 bytes
+ * internet adress and port in blocks of BLOCK_SIZE packets. It puts as the first 4 bytes
  *  a sequence number and from there it puts the message.
  *  After sending a block, it waits for a bitmap of size 1024 bits. If the n-th
  *  bit is true, the transfer of the n-th datagrampacket was successfull. After the
@@ -22,35 +22,43 @@ import java.util.BitSet;
 public class Transmit_Java{
    
     final static int SEQ_NR_BYTE_LENGTH = 4;
+    static int BLOCK_SIZE;
+    final static int PACKET_SIZE = 1024;
     
     public static void main(String args[])throws IOException, UnknownHostException{
         DatagramSocket socket = new DatagramSocket();
-        
         int numberOfPackets = getNumberOfPackets(args[0]);
-        boolean[] bitMapReceived = new boolean[1024];
+        BLOCK_SIZE = Integer.parseInt(args[1]);
+        boolean[] bitMapReceived = new boolean[BLOCK_SIZE];
         int blockNumber = 0;
-        int numberOfBlocks = (int) Math.ceil(numberOfPackets/1024.0);
+        int numberOfBlocks = (int) Math.ceil(numberOfPackets/(double)BLOCK_SIZE);
+        int cycle = 1;
+        boolean packetsComplete = true;
         
         while (blockNumber < numberOfBlocks){
+        	if (packetsComplete) System.out.println("-----------------block " + blockNumber + " ---------------------");
+        	System.out.print(cycle + ": ");
         	sendPackets(socket, numberOfPackets, bitMapReceived, blockNumber);
         	
     		DatagramPacket incomingDPacket = new DatagramPacket(new byte[128], 128);
-    		//System.out.println("Warte auf Antwort vom Server...");
     		socket.receive(incomingDPacket);
-    		//System.out.println("--> Bitmap zurück erhalten"); 
     		bitMapReceived = toBooleanArray(incomingDPacket.getData());
     		
     		// check if all packets of block sent successfully
-    		boolean packetsComplete = true;
+    		packetsComplete = true;
     		int nmbPacketsInBlock;
-    		if (numberOfBlocks == blockNumber+1) {nmbPacketsInBlock = numberOfPackets-((numberOfBlocks-1)*1024);}
-    		else {nmbPacketsInBlock = 1024;}
+    		if (numberOfBlocks == blockNumber+1) {nmbPacketsInBlock = numberOfPackets-((numberOfBlocks-1)*BLOCK_SIZE);}
+    		else {nmbPacketsInBlock = BLOCK_SIZE;}
     		for (int i = 0; i < nmbPacketsInBlock && packetsComplete; i++){
     			if (!bitMapReceived[i]) {packetsComplete = false;}
     		}
     		if (packetsComplete) {
+    			cycle = 1;
     			blockNumber++;
-    			System.out.println("-----------------block " + blockNumber + " ---------------------");
+    			bitMapReceived = new boolean[BLOCK_SIZE];	
+    		}
+    		else {
+    			cycle++;
     		}
         }
         socket.close(); 
@@ -66,7 +74,7 @@ public class Transmit_Java{
         String str ="- Message";
         byte[] message = str.getBytes();
         
-        byte[] packet = new byte[1024];
+        byte[] packet = new byte[PACKET_SIZE];
         System.arraycopy(sequentialNr, 0, packet, 0, sequentialNr.length);
         System.arraycopy(message, 0, packet, sequentialNr.length, message.length);
         
@@ -76,16 +84,16 @@ public class Transmit_Java{
     																						
     private static void sendPackets(DatagramSocket socket, int numberOfPackets, boolean[] bitMapReceived, int blockNumber)throws IOException{
         
-        int packetNumber = blockNumber * 1024;
+        int packetNumber = blockNumber * BLOCK_SIZE;
         int startingPacketNumber = packetNumber;
         long timeFirstSent = 0;
         boolean isNotMeasured = true;
         int nmbOfSentPackets = 0;
         
         try{
-        	while (packetNumber < startingPacketNumber + 1024 && packetNumber < numberOfPackets){
+        	while (packetNumber < startingPacketNumber + BLOCK_SIZE && packetNumber < numberOfPackets){
         		
-				if (! bitMapReceived[packetNumber % 1024]) {
+				if (! bitMapReceived[packetNumber % BLOCK_SIZE]) {
 					DatagramPacket packet = buildPacket(packetNumber);
 					socket.send(packet);
 					nmbOfSentPackets++;
