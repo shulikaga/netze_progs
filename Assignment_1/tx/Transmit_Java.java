@@ -28,8 +28,24 @@ public class Transmit_Java{
     public static void main(String args[])throws IOException, UnknownHostException{
         DatagramSocket socket = new DatagramSocket();
         int numberOfPackets = getNumberOfPackets(args[0]);
+        System.out.println(numberOfPackets);
         BLOCK_SIZE = Integer.parseInt(args[1]);
-        boolean[] bitMapReceived = new boolean[BLOCK_SIZE];
+        
+        
+        if (numberOfPackets >= 0) {
+        	sendPackets(socket, numberOfPackets, BLOCK_SIZE);
+        }
+        else {
+        	sendPackets(socket, 100, BLOCK_SIZE);
+        	sendPackets(socket, 1000, BLOCK_SIZE);
+        	sendPackets(socket, 10000, BLOCK_SIZE);
+        }   
+        socket.close(); 
+    }
+    
+    
+    private static void sendPackets(DatagramSocket socket, int numberOfPackets, int bLOCK_SIZE2) throws IOException {
+    	boolean[] bitMapReceived = new boolean[BLOCK_SIZE];
         int blockNumber = 0;
         int numberOfBlocks = (int) Math.ceil(numberOfPackets/(double)BLOCK_SIZE);
         int cycle = 1;
@@ -38,7 +54,7 @@ public class Transmit_Java{
         while (blockNumber < numberOfBlocks){
         	if (packetsComplete) System.out.println("-----------------block " + blockNumber + " ---------------------");
         	System.out.print(cycle + ": ");
-        	sendPackets(socket, numberOfPackets, bitMapReceived, blockNumber);
+        	sendPacketsOfBlock(socket, numberOfPackets, bitMapReceived, blockNumber);
         	
     		DatagramPacket incomingDPacket = new DatagramPacket(new byte[128], 128);
     		socket.receive(incomingDPacket);
@@ -61,11 +77,11 @@ public class Transmit_Java{
     			cycle++;
     		}
         }
-        socket.close(); 
-    }
-    
-    
-    private static DatagramPacket buildPacket(int packetNumber) throws UnknownHostException{
+		
+	}
+
+
+	private static DatagramPacket buildPacket(int packetNumber) throws UnknownHostException{
     	 InetAddress inetAddress = InetAddress.getByName("127.0.0.1");
     	 int port = 4712;
 
@@ -82,7 +98,7 @@ public class Transmit_Java{
     }
     
     																						
-    private static void sendPackets(DatagramSocket socket, int numberOfPackets, boolean[] bitMapReceived, int blockNumber)throws IOException{
+    private static void sendPacketsOfBlock(DatagramSocket socket, int numberOfPackets, boolean[] bitMapReceived, int blockNumber)throws IOException{
         
         int packetNumber = blockNumber * BLOCK_SIZE;
         int startingPacketNumber = packetNumber;

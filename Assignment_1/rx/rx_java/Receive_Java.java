@@ -26,14 +26,28 @@ import java.util.List;
 public class Receive_Java{
 
 	static int BLOCK_SIZE;
-	
+	static int SERVER_TIMEOUT;
+	/**
+	 * the main method waits for the first datagram and saves it and also the continuously following
+	 * datagrams in an Arraylist of packets. At the point, where the flow stops for SERVER_TIMEOUT ms
+	 * it sends back to sender a bitmap that reflects, if the n-th datagram is already received.
+	 * After this, it awaits the remaining datagrams and so forth.
+	 * 
+	 * If a sequence number comes twice, this indicates a new sending. A new packets list will be created.
+	 * 
+	 * @param args[0] the BLOCK_SIZE: the size of the portions, in which a sending will be sent (max. 1024)
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
 	public static void main(String args[]) throws ClassNotFoundException, IOException {
-		
+		SERVER_TIMEOUT = 5;
 		BLOCK_SIZE = Integer.parseInt(args[0]);
 		long timeFirstReceived = 0;
-		List<Packet> packets = new ArrayList<>();// to save all the received packets
+		ArrayList<Packet> packets = new ArrayList<>();// to save a sequence of packets
+		List<ArrayList<Packet>> sendings = new ArrayList<ArrayList<Packet>>(); // to save sequences of packets
+		sendings.add(packets);
 		// the Datagrams will be sent in blocks of BLOCK_SIZE datagrams. this bitmap reflects, if
-		// the n-th datagram is allready received "bitmapReceived[n] = true"
+		// the n-th datagram is already received "bitmapReceived[n] = true"
 		boolean[] bitMapReceived = new boolean[BLOCK_SIZE];
 		int sourceport; // where to send back the bitMapReceived
 		DatagramSocket server = new DatagramSocket(4712);
@@ -43,7 +57,7 @@ public class Receive_Java{
 		System.out.println("------------------------------------------");
 		
 		// create paket container for receiving data
-		DatagramPacket incomingDPacket = new DatagramPacket(new byte[BLOCK_SIZE], BLOCK_SIZE);
+		DatagramPacket incomingDPacket = new DatagramPacket(new byte[1024], 1024);
 		
 		// wait and receive first datagram
 		server.receive(incomingDPacket);
@@ -54,6 +68,7 @@ public class Receive_Java{
 		timeFirstReceived = timeReceived;
 		long timeLastReceived = timeReceived;
 		
+		// create packet an add it to the packetslist of this sending
 		Packet packet = new Packet(countDPacketsReceived, incomingDPacket.getData(), timeReceived);
 		packets.add(packet);
 		
@@ -61,7 +76,7 @@ public class Receive_Java{
 		sourceport = incomingDPacket.getPort();
 		
 		// set server Socket timeout.
-		server.setSoTimeout(5);
+		server.setSoTimeout(SERVER_TIMEOUT);
 		
 		// set bitMapReceived
 		bitMapReceived[packet.getSentSeqNr()] = true;
@@ -89,14 +104,20 @@ public class Receive_Java{
 				// get packet and add to list
 				byte[] data = incomingDPacket.getData();
 				packet = new Packet(countDPacketsReceived, data, timeReceived);
-				packets.add(packet);
-
-				// set bitMapReceived
-				bitMapReceived[packet.getSentSeqNr() % BLOCK_SIZE] = true;
-				// print send/receive-info
-				print(incomingDPacket, packet, countDPacketsReceived + 1);
-
+				if (bitMapReceived[packet.getSentSeqNr() % BLOCK_SIZE] == false){
+					packets.add(packet);
+					bitMapReceived[packet.getSentSeqNr() % BLOCK_SIZE] = true;
+				}
+				else {// if a packet with this seqNr has already arrived, this indicates a new sending
+					packets = new ArrayList<>();
+					sendings.add(packets);
+					packets.add(packet);
+					bitMapReceived = new boolean[BLOCK_SIZE];
+					bitMapReceived[packet.getSentSeqNr() % BLOCK_SIZE] = true;	
+				}
 				
+				print(incomingDPacket, packet, countDPacketsReceived + 1);
+			
 			} catch (SocketTimeoutException e) {
 				// send bitmap back to sender
 				byte[] message = toByteArray(bitMapReceived);
