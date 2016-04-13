@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <stdlib.h>
-#include<time.h> 
+#include<time.h>
 
 in_addr_t inet_addr(const char *cp);
 int BLOCK_SIZE;
@@ -39,6 +39,8 @@ void openSocket(){
 }
 
 receivePackets(){
+    
+    
     int booleanBitMapReceived[BLOCK_SIZE];
     printf("------------------------------------------\n");
     printf("Server is waiting for first datagram...\n");
@@ -46,24 +48,62 @@ receivePackets(){
     
     nBytes = recvfrom(UDP_SOCKET,BUFFER,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
     int countReceived = 0;
-    
-    long timeReceived = System.currentTimeMillis();
+    clock_t t1  = clock();
+    long timeReceived = ((long)t1 / 1000000.0F ) * 1000;
     long timeFirstReceived = timeReceived;
     long timeLastReceived = timeReceived;
     
+   // int sentSeqNr = getSentSeqNr(incomingDPacket);
+   // packets.put(sentSeqNr, incomingDPacket.getData());
     
-    //int i = 0;
-    //while(i < numberOfPackets){
-        /* Try to receive any incoming UDP datagram. Address and port of
-         requesting client will be stored on serverStorage variable */
-      //  nBytes = recvfrom(udpSocket,buffer,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
-        //long timeReceived =
-      //  printf("Received from server: %s\n",buffer);
+    // set port from where the DPackets are coming
+    //int sourceport = incomingDPacket.getPort();
+    
+    // set server Socket timeout.
+    //server.setSoTimeout(SERVER_TIMEOUT);
+    
+    // set bitMapReceived
+    //booleanBitMapReceived[sentSeqNr] = 1;
+    
+    // after n-times unsuccessfully waiting for new datagrams
+    int nmbOfWaitingCircles = 5;
+    
+    while (nmbOfWaitingCircles > 0) {
         
-      //  Packet packet = newPacket( i, buffer);//,  timeReceived);
-       // i++;
-    //}
-
+    
+           // server.receive(incomingDPacket);
+            
+            countReceived++;
+            nmbOfWaitingCircles = 5;
+            clock_t t2  = clock();
+            timeReceived = ((long)t2 / 1000000.0F ) * 1000;
+            timeLastReceived = timeReceived;
+            //sentSeqNr = getSentSeqNr(incomingDPacket);
+            //packets.put(sentSeqNr, incomingDPacket.getData());
+            
+            booleanBitMapReceived[sentSeqNr % BLOCK_SIZE] = 1;
+        
+        
+            // send bitmap back to sender
+            //char[] message = toByteArray(bitMapReceived);
+            //DatagramPacket answer = new DatagramPacket(message, message.length, incomingDPacket.getAddress(), sourceport);
+            //server.send(answer);
+            
+            // check, if this block is complete
+            int booleanPacketsComplete = 1;
+            for (int i1 = 0; i1 < BLOCK_SIZE && booleanPacketsComplete; i1++){
+                if (!booleanBitMapReceived[i1]) {booleanPacketsComplete = 0;}
+            }
+            if (booleanPacketsComplete) {
+                booleanBitMapReceived[BLOCK_SIZE];
+            }
+            
+            nmbOfWaitingCircles--;
+        
+    }
+    printf("%d %s %d %s\n",countReceived+1, " datagrams received: ", (timeLastReceived - timeFirstReceived), "ms");
+    printf("%s %d %s", "Speed: ", (int)speedMeasure(timeFirstReceived, timeLastReceived, packets)," mbit/s");
+   
 }
 
 void main(int argc, char *argv[]){
