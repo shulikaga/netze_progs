@@ -57,7 +57,7 @@ receivePackets(){
    // packets.put(sentSeqNr, incomingDPacket.getData());
     
     // set port from where the DPackets are coming
-    //int sourceport = incomingDPacket.getPort();
+    int port = ntohs(clientAddr.sin_port);
     
     // set server Socket timeout.
     //server.setSoTimeout(SERVER_TIMEOUT);
