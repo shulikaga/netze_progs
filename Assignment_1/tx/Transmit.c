@@ -15,7 +15,7 @@ struct sockaddr_in serverAddr;
 socklen_t addr_size;
 int clientSocket, PORT, nBytes;
 int BUFFER_SIZE = 1024;
-char buffer[1024];
+char buffer[BUFFER_SIZE];
 
 int SEQ_NR_BYTE_LENGTH = 4;
 int BLOCK_SIZE;
@@ -66,7 +66,7 @@ void buildPacket(int packetNumber){
 }
 
 void sendAllPackets(int numberOfPackets){
-    int * booleanBitMapReceived[BLOCK_SIZE];
+    int *booleanBitMapReceived[BLOCK_SIZE];
     int blockNumber = 0;
     int numberOfBlocks = (int)ceil(NUMBER_OF_PACKETS/(double)BLOCK_SIZE);
     int cycle = 1;
@@ -74,22 +74,34 @@ void sendAllPackets(int numberOfPackets){
     
     while(blockNumber < numberOfBlocks){
         if (boolPacketsComplete){
-            printf("-----------------block ");
-            printf(blockNumber);
-            printf(" ---------------------");
-        
+            printf("%s%d%s","-----------------block ",blockNumber," ---------------------");
         }
-        printf(cycle);
-        printf(": ");
+        printf("%d%s",cycle,": ");
         
         sendPacketsOfBlock(clientSocket, booleanBitMapReceived, blockNumber);
+        
+        booleanBitMapReceived = receiveBitmap(clientSocket);
+        boolPacketsComplete = checkIfPacketsComplete(clientSocket, bitMapReceived, numberOfBlocks, blockNumber);
+        
+        if (boolPacketsComplete) {
+            cycle = 1;
+            blockNumber++;
+            ?????booleanBitMapReceived = new boolean[BLOCK_SIZE];
+        }
+        else {
+            cycle++;
+        }
     }
     
-    
-    
-    
+    }
+
 }
 
+
+int[] receiveBitmap(int socket){
+    nBytes = recvfrom(udpSocket,buffer,128,0,(struct sockaddr *)&serverStorage, &addr_size);
+    return toBooleanArray(incomingDPacket.getData());
+}
 
 void sendPacketsOfBlock(int clientSocket, int *booleanBitMapReceived, int blockNumber){
     int packetNumber = blockNumber * BLOCK_SIZE;
