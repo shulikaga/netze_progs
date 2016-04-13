@@ -53,6 +53,25 @@ void buildPacket(int packetNumber){
     
 }
 
+void sendPacketsOfBlock(int clientSocket, int *booleanBitMapReceived, int blockNumber){
+    int packetNumber = blockNumber * BLOCK_SIZE;
+    int startingPacketNumber = packetNumber;
+    int nmbOfSentPackets = 0;
+    
+    while (packetNumber < startingPacketNumber + BLOCK_SIZE && packetNumber < NUMBER_OF_PACKETS) {
+        if (booleanBitMapReceived[packetNumber % BLOCK_SIZE]!=1) {
+            buildPacket(packetNumber);
+            sendto(clientSocket,BUFFER,NBYTES,0,(struct sockaddr *)&serverAddr,addr_size);
+            nmbOfSentPackets++;
+        }
+        packetNumber++;
+    }
+    printf("%d \n %s",nmbOfSentPackets, " datagrams have been (re)sent.");
+    
+    
+}
+
+
 void sendAllPackets(int numberOfPackets){
     int *booleanBitMapReceived[BLOCK_SIZE];
     int blockNumber = 0;
@@ -62,13 +81,13 @@ void sendAllPackets(int numberOfPackets){
     
     while(blockNumber < numberOfBlocks){
         if (boolPacketsComplete){
-            printf("%s%d%s","-----------------block ",blockNumber," ---------------------");
+            printf("%s%d%s","-----------------block ",blockNumber," ---------------------\n");
         }
         printf("%d%s",cycle,": ");
         
         sendPacketsOfBlock(CLIENT_SOCKET, booleanBitMapReceived, blockNumber);
         
-        booleanBitMapReceived = receiveBitmap(CLIENT_SOCKET);
+       /* booleanBitMapReceived = receiveBitmap(CLIENT_SOCKET);
         boolPacketsComplete = checkIfPacketsComplete(CLIENT_SOCKET, bitMapReceived, numberOfBlocks, blockNumber);
         
         if (boolPacketsComplete) {
@@ -78,64 +97,27 @@ void sendAllPackets(int numberOfPackets){
         }
         else {
             cycle++;
+        }*/
+    
+    }
+
+}
+        
+    int main(int argc, char *argv[]){
+        
+        if(argc < 4){
+            fputs("Usage: Transmit_C <number of packets> <block size> <port> <packet size>", stderr);
+            exit(1);
         }
+        
+        NUMBER_OF_PACKETS = atoi(argv[1]);
+        BLOCK_SIZE = atoi(argv[2]);
+        PORT = atoi(argv[3]);
+        PACKET_SIZE = atoi(argv[4]);
+        
+        openSocket();
+        sendAllPackets(NUMBER_OF_PACKETS);
+        close(CLIENT_SOCKET);
+        
+        return 0;
     }
-    
-    }
-
-}
-
-
-int[] receiveBitmap(int socket){
-    nBytes = recvfrom(udpSocket,buffer,128,0,(struct sockaddr *)&serverStorage, &addr_size);
-    return toBooleanArray(buffer);
-}
-
-int[] toBooleanArray(char *bytes) {
-    BitSet bits = BitSet.valueOf(bytes);
-    int[] bools[bytes.length * 8];
-    for (int i = bits.nextSetBit(0); i != -1; i = bits.nextSetBit(i+1)) {
-        bools[i] = true;
-    }
-    return bools;
-}
-
-void sendPacketsOfBlock(int clientSocket, int *booleanBitMapReceived, int blockNumber){
-    int packetNumber = blockNumber * BLOCK_SIZE;
-    int startingPacketNumber = packetNumber;
-    int nmbOfSentPackets = 0;
-    
-        while (packetNumber < startingPacketNumber + BLOCK_SIZE && packetNumber < NUMBER_OF_PACKETS) {
-            if (booleanBitMapReceived[packetNumber % BLOCK_SIZE]!=1) {
-                buildPacket(packetNumber);
-                sendto(clientSocket,BUFFER,NBYTES,0,(struct sockaddr *)&serverAddr,addr_size);
-                nmbOfSentPackets++;
-            }
-            packetNumber++;
-        }
-    printf("%d \n %s",nmbOfSentPackets, " datagrams have been (re)sent.");
-    
-    
-}
-
-
-int main(int argc, char *argv[]){
-    
-    if(argc < 4){
-        fputs("Usage: Transmit_C <number of packets> <block size> <port> <packet size>", stderr);
-        exit(1);
-    }
-    
-    NUMBER_OF_PACKETS = atoi(argv[1]);
-    BLOCK_SIZE = atoi(argv[2]);
-    PORT = atoi(argv[3]);
-    PACKET_SIZE = atoi(argv[4]);
-    
-    openSocket();
-    sendAllPackets(NUMBER_OF_PACKETS);
-    close(CLIENT_SOCKET);
-    
-    return 0;
-}
-
-
