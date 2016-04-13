@@ -2,14 +2,7 @@
 //  Transmit.c
 
 
-#ifndef Transmit_h
-#define Transmit_h
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#endif /* Transmit_h */
-
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -20,9 +13,14 @@
 in_addr_t inet_addr(const char *cp);
 struct sockaddr_in serverAddr;
 socklen_t addr_size;
-int clientSocket, portNum, nBytes;
+int clientSocket, PORT, nBytes;
 int BUFFER_SIZE = 1024;
 char buffer[1024];
+
+int SEQ_NR_BYTE_LENGTH = 4;
+int BLOCK_SIZE;
+int PACKET_SIZE;
+int NUMBER_OF_PACKETS;
 
 
 
@@ -67,18 +65,47 @@ void buildPacket(int packetNumber){
     
 }
 
-void sendPackets(int numberOfPackets){
-    int packetNumber = 1;
-    printf("UPD lauft...\n");
-    while(packetNumber <= numberOfPackets){
-       
-        buildPacket(packetNumber);//typing a message
+void sendAllPackets(int numberOfPackets){
+    int * booleanBitMapReceived[BLOCK_SIZE];
+    int blockNumber = 0;
+    int numberOfBlocks = (int)ceil(NUMBER_OF_PACKETS/(double)BLOCK_SIZE);
+    int cycle = 1;
+    int boolPacketsComplete = 1;
+    
+    while(blockNumber < numberOfBlocks){
+        if (boolPacketsComplete){
+            printf("-----------------block ");
+            printf(blockNumber);
+            printf(" ---------------------");
         
-        sendto(clientSocket,buffer,nBytes,0,(struct sockaddr *)&serverAddr,addr_size);
+        }
+        printf(cycle);
+        printf(": ");
         
-        packetNumber++;
+        sendPacketsOfBlock(clientSocket, booleanBitMapReceived, blockNumber);
     }
-    printf("%d have been sent to port %d %\n",packetNumber-1, serverAddr.sin_port);
+    
+    
+    
+    
+}
+
+
+void sendPacketsOfBlock(int clientSocket, int *booleanBitMapReceived, int blockNumber){
+    int packetNumber = blockNumber * BLOCK_SIZE;
+    int startingPacketNumber = packetNumber;
+    int nmbOfSentPackets = 0;
+    
+        while (packetNumber < startingPacketNumber + BLOCK_SIZE && packetNumber < NUMBER_OF_PACKETS) {
+            if (booleanBitMapReceived[packetNumber % BLOCK_SIZE]!=1) {
+                buildPacket(packetNumber);
+                sendto(clientSocket,buffer,nBytes,0,(struct sockaddr *)&serverAddr,addr_size);
+                nmbOfSentPackets++;
+            }
+            packetNumber++;
+        }
+    printf("%d \n %s",nmbOfSentPackets, " datagrams have been (re)sent.");
+    
     
 }
 
@@ -86,16 +113,14 @@ void sendPackets(int numberOfPackets){
 
 int main(int argc, char *argv[]){
     
-    NUMBER_OF_PACKETS = getNumberOfPackets(args[1]);
-    BLOCK_SIZE = Integer.parseInt(args[2]);
-    PORT = Integer.parseInt(args[3]);
-    PACKET_SIZE = Integer.parseInt(args[4]);
+    NUMBER_OF_PACKETS = getNumberOfPackets(atoi(argv[1]));
+    BLOCK_SIZE = atoi(argv[2]);
+    PORT = atoi(argv[3]);
+    PACKET_SIZE = atoi(argv[4]);
     
-    // setSocketAddress();
-
-    // sendPackets(atoi(argv[1]));
-    
-   // close(clientSocket);
+    setSocketAddress();
+    sendAllPackets(NUMBER_OF_PACKETS);
+    close(clientSocket);
 
     
     return 0;
