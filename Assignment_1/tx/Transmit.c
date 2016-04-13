@@ -86,11 +86,16 @@ void sendPackets(int numberOfPackets){
 
 int main(int argc, char *argv[]){
     
-     setSocketAddress();
-
-     sendPackets(atoi(argv[1]));
+    NUMBER_OF_PACKETS = getNumberOfPackets(args[1]);
+    BLOCK_SIZE = Integer.parseInt(args[2]);
+    PORT = Integer.parseInt(args[3]);
+    PACKET_SIZE = Integer.parseInt(args[4]);
     
-    close(clientSocket);
+    // setSocketAddress();
+
+    // sendPackets(atoi(argv[1]));
+    
+   // close(clientSocket);
 
     
     return 0;
