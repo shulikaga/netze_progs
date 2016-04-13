@@ -13,30 +13,18 @@
 in_addr_t inet_addr(const char *cp);
 struct sockaddr_in serverAddr;
 socklen_t addr_size;
-int clientSocket, PORT, nBytes;
+int CLIENT_SOCKET, PORT, NBYTES;
 int BUFFER_SIZE = 1024;
-char buffer[BUFFER_SIZE];
-
+char BUFFER[1024];
 int SEQ_NR_BYTE_LENGTH = 4;
 int BLOCK_SIZE;
 int PACKET_SIZE;
 int NUMBER_OF_PACKETS;
 
 
-
-int getNumberOfPackets(int number){
-    if(number!=0){
-        return number;
-    }else{
-        fputs("Usage: Transmit_C <number of packets to be sent>", stderr);
-        exit(1);
-    }
-    
-}
-
-void setSocketAddress(){
+void openSocket(){
     /*Create UDP socket*/
-    clientSocket = socket(PF_INET, SOCK_DGRAM, 0);
+    CLIENT_SOCKET = socket(PF_INET, SOCK_DGRAM, 0);
     
     /*Configure settings in address struct*/
     serverAddr.sin_family = AF_INET;
@@ -51,17 +39,17 @@ void setSocketAddress(){
 void buildPacket(int packetNumber){
    
     //sequentialNr in bytes
-    buffer[0] = (packetNumber >> 24) & 0xFF;
-    buffer[1] = (packetNumber >> 16) & 0xFF;
-    buffer[2] = (packetNumber >> 8) & 0xFF;
-    buffer[3] = packetNumber & 0xFF;
-    buffer[4] = 'M';
-    buffer[5] = 'e';
-    buffer[6] = 's';
-    buffer[7] = 's';
-    buffer[8] = 'a';
-    buffer[9] = 'g';
-    buffer[10] = 'e';
+    BUFFER[0] = (packetNumber >> 24) & 0xFF;
+    BUFFER[1] = (packetNumber >> 16) & 0xFF;
+    BUFFER[2] = (packetNumber >> 8) & 0xFF;
+    BUFFER[3] = packetNumber & 0xFF;
+    BUFFER[4] = 'M';
+    BUFFER[5] = 'e';
+    BUFFER[6] = 's';
+    BUFFER[7] = 's';
+    BUFFER[8] = 'a';
+    BUFFER[9] = 'g';
+    BUFFER[10] = 'e';
     
 }
 
@@ -78,10 +66,10 @@ void sendAllPackets(int numberOfPackets){
         }
         printf("%d%s",cycle,": ");
         
-        sendPacketsOfBlock(clientSocket, booleanBitMapReceived, blockNumber);
+        sendPacketsOfBlock(CLIENT_SOCKET, booleanBitMapReceived, blockNumber);
         
-        booleanBitMapReceived = receiveBitmap(clientSocket);
-        boolPacketsComplete = checkIfPacketsComplete(clientSocket, bitMapReceived, numberOfBlocks, blockNumber);
+        booleanBitMapReceived = receiveBitmap(CLIENT_SOCKET);
+        boolPacketsComplete = checkIfPacketsComplete(CLIENT_SOCKET, bitMapReceived, numberOfBlocks, blockNumber);
         
         if (boolPacketsComplete) {
             cycle = 1;
@@ -100,7 +88,16 @@ void sendAllPackets(int numberOfPackets){
 
 int[] receiveBitmap(int socket){
     nBytes = recvfrom(udpSocket,buffer,128,0,(struct sockaddr *)&serverStorage, &addr_size);
-    return toBooleanArray(incomingDPacket.getData());
+    return toBooleanArray(buffer);
+}
+
+int[] toBooleanArray(char *bytes) {
+    BitSet bits = BitSet.valueOf(bytes);
+    int[] bools[bytes.length * 8];
+    for (int i = bits.nextSetBit(0); i != -1; i = bits.nextSetBit(i+1)) {
+        bools[i] = true;
+    }
+    return bools;
 }
 
 void sendPacketsOfBlock(int clientSocket, int *booleanBitMapReceived, int blockNumber){
@@ -111,7 +108,7 @@ void sendPacketsOfBlock(int clientSocket, int *booleanBitMapReceived, int blockN
         while (packetNumber < startingPacketNumber + BLOCK_SIZE && packetNumber < NUMBER_OF_PACKETS) {
             if (booleanBitMapReceived[packetNumber % BLOCK_SIZE]!=1) {
                 buildPacket(packetNumber);
-                sendto(clientSocket,buffer,nBytes,0,(struct sockaddr *)&serverAddr,addr_size);
+                sendto(clientSocket,BUFFER,NBYTES,0,(struct sockaddr *)&serverAddr,addr_size);
                 nmbOfSentPackets++;
             }
             packetNumber++;
@@ -122,18 +119,23 @@ void sendPacketsOfBlock(int clientSocket, int *booleanBitMapReceived, int blockN
 }
 
 
-
 int main(int argc, char *argv[]){
     
-    NUMBER_OF_PACKETS = getNumberOfPackets(atoi(argv[1]));
+    if(argc < 4){
+        fputs("Usage: Transmit_C <number of packets> <block size> <port> <packet size>", stderr);
+        exit(1);
+    }
+    
+    NUMBER_OF_PACKETS = atoi(argv[1]);
     BLOCK_SIZE = atoi(argv[2]);
     PORT = atoi(argv[3]);
     PACKET_SIZE = atoi(argv[4]);
     
-    setSocketAddress();
+    openSocket();
     sendAllPackets(NUMBER_OF_PACKETS);
-    close(clientSocket);
-
+    close(CLIENT_SOCKET);
     
     return 0;
 }
+
+
