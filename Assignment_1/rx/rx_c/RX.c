@@ -7,13 +7,14 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <stdlib.h>
-#include<time.h>
+#include <time.h>
+#include "Packet.h"
 
 in_addr_t inet_addr(const char *cp);
 int BLOCK_SIZE;
 int SERVER_TIMEOUT = 1;
 int PORT;
-int UDP_SOCKET, nBytes;
+int UDP_SOCKET, NBYTES;
 char BUFFER[1024];
 struct sockaddr_in serverAddr, clientAddr;
 struct sockaddr_storage serverStorage;
@@ -38,15 +39,14 @@ void openSocket(){
     addr_size = sizeof serverStorage;
 }
 
-receivePackets(){
-    
+ void receivePackets(PacketList *packets){
     
     int booleanBitMapReceived[BLOCK_SIZE];
     printf("------------------------------------------\n");
     printf("Server is waiting for first datagram...\n");
     printf("------------------------------------------\n");
     
-    nBytes = recvfrom(UDP_SOCKET,BUFFER,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
+    NBYTES = recvfrom(UDP_SOCKET,BUFFER,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
     int countReceived = 0;
     clock_t t1  = clock();
     long timeReceived = ((long)t1 / 1000000.0F ) * 1000;
@@ -54,7 +54,7 @@ receivePackets(){
     long timeLastReceived = timeReceived;
     
     int sentSeqNr = getSentSeqNr(BUFFER);
-   // packets.put(sentSeqNr, incomingDPacket.getData());
+    addPacket(packets, sentSeqNr, BUFFER);
     
     // set port from where the DPackets are coming
     int port = ntohs(clientAddr.sin_port);
@@ -71,7 +71,7 @@ receivePackets(){
     while (nmbOfWaitingCircles > 0) {
         
     
-            nBytes = recvfrom(UDP_SOCKET,BUFFER,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
+            NBYTES = recvfrom(UDP_SOCKET,BUFFER,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
             countReceived++;
             nmbOfWaitingCircles = 5;
             clock_t t2  = clock();
@@ -84,8 +84,8 @@ receivePackets(){
         
         
             // send bitmap back to sender
-            char[] message = itoa(booleanBitMapReceived);
-            sendto(clientSocket,message,NBYTES,0,(struct sockaddr *)&serverAddr,addr_size);
+            char message = itoa(booleanBitMapReceived);
+            sendto(openSocket, message, NBYTES,0,(struct sockaddr *)&serverAddr,addr_size);
 
         
             // check, if this block is complete
@@ -100,7 +100,7 @@ receivePackets(){
             nmbOfWaitingCircles--;
         
     }
-    printf("%d %s %d %s\n",countReceived+1, " datagrams received: ", (timeLastReceived - timeFirstReceived), "ms");
+    printf("%d %s %d %s\n", countReceived+1, " datagrams received: ", (timeLastReceived - timeFirstReceived), "ms");
     printf("%s %d %s", "Speed: ", (int)speedMeasure(timeFirstReceived, timeLastReceived, packets)," mbit/s");
    
 }
@@ -111,7 +111,7 @@ int getSentSeqNr(char *incomingDPacket) {
     return atoi(seqNmbInBytes);
 }
 
-void main(int argc, char *argv[]){
+int main(int argc, char *argv[]){
     
     if (argc < 2){
         fputs ("usage: Receive < BLOCK_SIZE> <PORT> \n", stderr);
@@ -120,10 +120,11 @@ void main(int argc, char *argv[]){
     
     BLOCK_SIZE = atoi(argv[1]);
     PORT = atoi(argv[2]);
-    //Map<Integer, byte[]> packets = new HashMap <Integer,byte[]>();
+    PacketList *packets = newPacketList();
     
     openSocket();
     receivePackets(packets);
     close(UDP_SOCKET);
+   
     return 0;
 }
