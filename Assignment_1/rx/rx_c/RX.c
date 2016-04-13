@@ -53,7 +53,7 @@ receivePackets(){
     long timeFirstReceived = timeReceived;
     long timeLastReceived = timeReceived;
     
-   // int sentSeqNr = getSentSeqNr(incomingDPacket);
+    int sentSeqNr = getSentSeqNr(BUFFER);
    // packets.put(sentSeqNr, incomingDPacket.getData());
     
     // set port from where the DPackets are coming
@@ -63,7 +63,7 @@ receivePackets(){
     //server.setSoTimeout(SERVER_TIMEOUT);
     
     // set bitMapReceived
-    //booleanBitMapReceived[sentSeqNr] = 1;
+    booleanBitMapReceived[sentSeqNr] = 1;
     
     // after n-times unsuccessfully waiting for new datagrams
     int nmbOfWaitingCircles = 5;
@@ -71,24 +71,23 @@ receivePackets(){
     while (nmbOfWaitingCircles > 0) {
         
     
-           // server.receive(incomingDPacket);
-            
+            nBytes = recvfrom(UDP_SOCKET,BUFFER,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
             countReceived++;
             nmbOfWaitingCircles = 5;
             clock_t t2  = clock();
             timeReceived = ((long)t2 / 1000000.0F ) * 1000;
             timeLastReceived = timeReceived;
-            //sentSeqNr = getSentSeqNr(incomingDPacket);
-            //packets.put(sentSeqNr, incomingDPacket.getData());
+            sentSeqNr = getSentSeqNr(BUFFER);
+            //packets.put(sentSeqNr, BUFFER);
             
             booleanBitMapReceived[sentSeqNr % BLOCK_SIZE] = 1;
         
         
             // send bitmap back to sender
-            //char[] message = toByteArray(bitMapReceived);
-            //DatagramPacket answer = new DatagramPacket(message, message.length, incomingDPacket.getAddress(), sourceport);
-            //server.send(answer);
-            
+            char[] message = itoa(booleanBitMapReceived);
+            sendto(clientSocket,message,NBYTES,0,(struct sockaddr *)&serverAddr,addr_size);
+
+        
             // check, if this block is complete
             int booleanPacketsComplete = 1;
             for (int i1 = 0; i1 < BLOCK_SIZE && booleanPacketsComplete; i1++){
@@ -106,10 +105,16 @@ receivePackets(){
    
 }
 
+int getSentSeqNr(char *incomingDPacket) {
+    char seqNmbInBytes[4];
+    strncpy(seqNmbInBytes, incomingDPacket, 4);
+    return atoi(seqNmbInBytes);
+}
+
 void main(int argc, char *argv[]){
     
     if (argc < 2){
-        fputs ("usage: RX <number of packets to receive> \n", stderr);
+        fputs ("usage: Receive < BLOCK_SIZE> <PORT> \n", stderr);
         exit (1);
     }
     
