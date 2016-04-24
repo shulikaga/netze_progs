@@ -23,15 +23,17 @@ public class Receive_Java{
 	
 	private void start() throws IOException {
 		System.out.println("-------SERVER READY-------------");
+		
 		while(true){
 			DatagramPacket packet = new DatagramPacket(ByteBuffer.allocate(4).array(), 4);
 			
 			socket.receive(packet);
 			
 			final int seqNmb = ByteBuffer.wrap(packet.getData()).order(ByteOrder.BIG_ENDIAN).getInt();
-			System.out.println("Packet received: " + seqNmb);
+			//System.out.println("Packet received: " + seqNmb);
 			
 			socket.send(new DatagramPacket(packet.getData(), packet.getData().length, packet.getAddress(), packet.getPort()));
+			
 			
 		}
 		

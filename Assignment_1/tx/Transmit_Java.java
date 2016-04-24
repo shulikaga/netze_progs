@@ -65,7 +65,7 @@ public class Transmit_Java {
 		socket.receive(packet);
 		
 		final int seqNmb = ByteBuffer.wrap(packet.getData()).order(ByteOrder.BIG_ENDIAN).getInt();
-		System.out.println("Packet Ack received: " + seqNmb);
+		//System.out.println("Packet Ack received: " + seqNmb);
 		
 	}
 
@@ -81,9 +81,16 @@ public class Transmit_Java {
 	}
 
 	public static void main(String[] args) throws Exception {
-		final int NUMBER_OF_PACKETS = 10000;
-		final int PORT = 7777;
-		final String IP = "127.0.0.1";
+		int NUMBER_OF_PACKETS = 10000;
+		int PORT = 7777;
+		String IP = "127.0.0.1";
+		
+		if (args.length == 3){
+			NUMBER_OF_PACKETS = Integer.valueOf(args[0]);
+			PORT = Integer.valueOf(args[1]);
+			IP = args[2];
+		}
+		
 		Transmit_Java transmitter = new Transmit_Java(NUMBER_OF_PACKETS, PORT, IP);
 		transmitter.start();
 	}
