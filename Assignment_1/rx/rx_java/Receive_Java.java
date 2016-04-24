@@ -4,6 +4,10 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 /**
  * 
@@ -17,10 +21,12 @@ public class Receive_Java{
 
 	final DatagramSocket socket;
 	final int dataSize;
+	final Set<Integer> receivedSeqNo;
 
 	public Receive_Java(final int port, final int dataSize) throws SocketException{
 		socket = new DatagramSocket(port);
 		this.dataSize = dataSize;
+		receivedSeqNo = new HashSet<>();
 	}
 	
 	private void start() throws IOException {
@@ -30,14 +36,45 @@ public class Receive_Java{
 			DatagramPacket packet = new DatagramPacket(ByteBuffer.allocate(dataSize+8).array(), dataSize+8);
 			
 			socket.receive(packet);
-		    printByteArray(packet.getData());
-			final int seqNmb = ByteBuffer.wrap(packet.getData()).order(ByteOrder.BIG_ENDIAN).getInt();
-			System.out.println("Packet received: " + seqNmb);
+		    //printByteArray(packet.getData());
+		    
+		    ByteBuffer bufferData = ByteBuffer.wrap(packet.getData()).order(ByteOrder.BIG_ENDIAN);
+			final int seqNmb = bufferData.getInt();
+			
+			if(seqNmb == 0){
+				long crc = bufferData.getLong();
+				System.err.println("Last packet with CRC code received: " + crc);
+				checkCRC(crc);
+				// TODO lokalen crc berechnen und mit uebertragenen crc verlgleichen
+			} else{
+				System.out.println("Packet received: " + seqNmb);
+				receivedSeqNo.add(seqNmb);
+			}
 			
 			socket.send(new DatagramPacket(packet.getData(), packet.getData().length, packet.getAddress(), packet.getPort()));	
 		}	
 	}
 	
+	private void checkCRC(long receivedCrc) {
+		  
+		  ByteBuffer allData = ByteBuffer.allocate(dataSize * receivedSeqNo.size());
+		  for(Integer i : receivedSeqNo) {
+		   allData = allData.put(ByteBuffer.allocate(dataSize).putInt(i).order(ByteOrder.BIG_ENDIAN).array());
+		  } 
+		  byte[] data = allData.array();
+		  
+		  Checksum checksum = new CRC32();
+		  checksum.update(data, 0, data.length);
+		  
+		  if(receivedCrc == checksum.getValue()) {
+		   System.err.println("Bist a cooler Typ. Passt. Ready for next transfer.");
+		  } else {
+		   System.out.println("Shit!! CRC passt neda. Ready for next transfer");
+		  }
+		  
+		  receivedSeqNo.clear();
+		 }
+
 	private void printByteArray(byte[] bytes){
 		for (byte b : bytes) {
 		    System.out.println(Integer.toBinaryString(b & 255 | 256).substring(1));
@@ -45,8 +82,12 @@ public class Receive_Java{
 	}
 	
 	public static void main(String[] args) throws Exception {
-		final int PORT = Integer.valueOf(args[0]);
-		final int DATA_SIZE = Integer.valueOf(args[1]);
+		int PORT = 7777;
+		int DATA_SIZE = 4;
+		if (args.length == 2){
+			PORT = Integer.valueOf(args[0]);
+			DATA_SIZE = Integer.valueOf(args[1]);
+		}
 		
 		Receive_Java receiver = new Receive_Java(PORT, DATA_SIZE);
 		receiver.start();

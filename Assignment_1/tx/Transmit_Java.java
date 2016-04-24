@@ -40,8 +40,8 @@ public class Transmit_Java {
 	
 	public void prepareData() {
 		final ByteBuffer allData = ByteBuffer.allocate(dataSize * numPackets);
-		for(int i = 0; i < numPackets; i++){
-			allData.put(ByteBuffer.allocate(dataSize).putInt(i).order(ByteOrder.BIG_ENDIAN));
+		for(int i = 1; i <= numPackets; i++){
+			allData.put(ByteBuffer.allocate(dataSize).putInt(i).order(ByteOrder.BIG_ENDIAN).array());
 		}
 		data = allData.array();
 	}
@@ -54,7 +54,7 @@ public class Transmit_Java {
 
 	public void transfer() throws IOException {
 		// send all data
-		for (int i = 1; i <= numPackets; i++) {
+		for (int i = 0; i < numPackets; i++) {
 			boolean send = true;
 			while (send) {
 				sendPacket(i);
@@ -75,9 +75,11 @@ public class Transmit_Java {
 	
 	private void sendCRC32() throws IOException {
 		byte[] crcPacket = ByteBuffer.allocate(dataSize + 8).putInt(0).putLong(checksum).order(ByteOrder.BIG_ENDIAN).array();
+		System.out.println("crc is: " + checksum);
 		boolean send = true;
 		while(send){
 			socket.send(new DatagramPacket(crcPacket, crcPacket.length, InetAddress.getByName(ip), port));
+			
 			try{
 				receiveAck(0);
 				send = false;
