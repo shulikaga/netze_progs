@@ -2,14 +2,7 @@
 //  Transmit.c
 
 
-#ifndef Transmit_h
-#define Transmit_h
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#endif /* Transmit_h */
-
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -20,25 +13,18 @@
 in_addr_t inet_addr(const char *cp);
 struct sockaddr_in serverAddr;
 socklen_t addr_size;
-int clientSocket, portNum, nBytes;
+int CLIENT_SOCKET, PORT, NBYTES;
 int BUFFER_SIZE = 1024;
-char buffer[1024];
+char BUFFER[1024];
+int SEQ_NR_BYTE_LENGTH = 4;
+int BLOCK_SIZE;
+int PACKET_SIZE;
+int NUMBER_OF_PACKETS;
 
 
-
-int getNumberOfPackets(int number){
-    if(number!=0){
-        return number;
-    }else{
-        fputs("Usage: Transmit_C <number of packets to be sent>", stderr);
-        exit(1);
-    }
-    
-}
-
-void setSocketAddress(){
+void openSocket(){
     /*Create UDP socket*/
-    clientSocket = socket(PF_INET, SOCK_DGRAM, 0);
+    CLIENT_SOCKET = socket(PF_INET, SOCK_DGRAM, 0);
     
     /*Configure settings in address struct*/
     serverAddr.sin_family = AF_INET;
@@ -53,45 +39,85 @@ void setSocketAddress(){
 void buildPacket(int packetNumber){
    
     //sequentialNr in bytes
-    buffer[0] = (packetNumber >> 24) & 0xFF;
-    buffer[1] = (packetNumber >> 16) & 0xFF;
-    buffer[2] = (packetNumber >> 8) & 0xFF;
-    buffer[3] = packetNumber & 0xFF;
-    buffer[4] = 'M';
-    buffer[5] = 'e';
-    buffer[6] = 's';
-    buffer[7] = 's';
-    buffer[8] = 'a';
-    buffer[9] = 'g';
-    buffer[10] = 'e';
+    BUFFER[0] = (packetNumber >> 24) & 0xFF;
+    BUFFER[1] = (packetNumber >> 16) & 0xFF;
+    BUFFER[2] = (packetNumber >> 8) & 0xFF;
+    BUFFER[3] = packetNumber & 0xFF;
+    BUFFER[4] = 'M';
+    BUFFER[5] = 'e';
+    BUFFER[6] = 's';
+    BUFFER[7] = 's';
+    BUFFER[8] = 'a';
+    BUFFER[9] = 'g';
+    BUFFER[10] = 'e';
     
 }
 
-void sendPackets(int numberOfPackets){
-    int packetNumber = 1;
-    printf("UPD lauft...\n");
-    while(packetNumber <= numberOfPackets){
-       
-        buildPacket(packetNumber);//typing a message
-        
-        sendto(clientSocket,buffer,nBytes,0,(struct sockaddr *)&serverAddr,addr_size);
-        
+void sendPacketsOfBlock(int clientSocket, int *booleanBitMapReceived, int blockNumber){
+    int packetNumber = blockNumber * BLOCK_SIZE;
+    int startingPacketNumber = packetNumber;
+    int nmbOfSentPackets = 0;
+    
+    while (packetNumber < startingPacketNumber + BLOCK_SIZE && packetNumber < NUMBER_OF_PACKETS) {
+        if (booleanBitMapReceived[packetNumber % BLOCK_SIZE]!=1) {
+            buildPacket(packetNumber);
+            sendto(clientSocket,BUFFER,NBYTES,0,(struct sockaddr *)&serverAddr,addr_size);
+            nmbOfSentPackets++;
+        }
         packetNumber++;
     }
-    printf("%d have been sent to port %d %\n",packetNumber-1, serverAddr.sin_port);
+    printf("%d \n %s",nmbOfSentPackets, " datagrams have been (re)sent.");
+    
     
 }
 
 
-
-int main(int argc, char *argv[]){
+void sendAllPackets(int numberOfPackets){
+    int *booleanBitMapReceived[BLOCK_SIZE];
+    int blockNumber = 0;
+    int numberOfBlocks = (int)ceil(NUMBER_OF_PACKETS/(double)BLOCK_SIZE);
+    int cycle = 1;
+    int boolPacketsComplete = 1;
     
-     setSocketAddress();
-
-     sendPackets(atoi(argv[1]));
+    while(blockNumber < numberOfBlocks){
+        if (boolPacketsComplete){
+            printf("%s%d%s","-----------------block ",blockNumber," ---------------------\n");
+        }
+        printf("%d%s",cycle,": ");
+        
+        sendPacketsOfBlock(CLIENT_SOCKET, booleanBitMapReceived, blockNumber);
+        
+       /* booleanBitMapReceived = receiveBitmap(CLIENT_SOCKET);
+        boolPacketsComplete = checkIfPacketsComplete(CLIENT_SOCKET, bitMapReceived, numberOfBlocks, blockNumber);
+        
+        if (boolPacketsComplete) {
+            cycle = 1;
+            blockNumber++;
+            ?????booleanBitMapReceived = new boolean[BLOCK_SIZE];
+        }
+        else {
+            cycle++;
+        }*/
     
-    close(clientSocket);
+    }
 
-    
-    return 0;
 }
+        
+    int main(int argc, char *argv[]){
+        
+        if(argc < 4){
+            fputs("Usage: Transmit_C <number of packets> <block size> <port> <packet size>", stderr);
+            exit(1);
+        }
+        
+        NUMBER_OF_PACKETS = atoi(argv[1]);
+        BLOCK_SIZE = atoi(argv[2]);
+        PORT = atoi(argv[3]);
+        PACKET_SIZE = atoi(argv[4]);
+        
+        openSocket();
+        sendAllPackets(NUMBER_OF_PACKETS);
+        close(CLIENT_SOCKET);
+        
+        return 0;
+    }
