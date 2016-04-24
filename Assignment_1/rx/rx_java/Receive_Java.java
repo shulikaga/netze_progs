@@ -26,16 +26,22 @@ public class Receive_Java{
 	private void start() throws IOException {
 		System.out.println("-------SERVER READY-------------");
 		
-		while(true){
-			DatagramPacket packet = new DatagramPacket(ByteBuffer.allocate(dataSize).array(), dataSize);
+		while(true){														// +8 is CRC32-cecksum
+			DatagramPacket packet = new DatagramPacket(ByteBuffer.allocate(dataSize+8).array(), dataSize+8);
 			
 			socket.receive(packet);
-		
+		    printByteArray(packet.getData());
 			final int seqNmb = ByteBuffer.wrap(packet.getData()).order(ByteOrder.BIG_ENDIAN).getInt();
 			System.out.println("Packet received: " + seqNmb);
 			
 			socket.send(new DatagramPacket(packet.getData(), packet.getData().length, packet.getAddress(), packet.getPort()));	
 		}	
+	}
+	
+	private void printByteArray(byte[] bytes){
+		for (byte b : bytes) {
+		    System.out.println(Integer.toBinaryString(b & 255 | 256).substring(1));
+		}
 	}
 	
 	public static void main(String[] args) throws Exception {
