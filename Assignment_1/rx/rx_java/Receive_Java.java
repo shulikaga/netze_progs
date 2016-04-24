@@ -15,17 +15,19 @@ import java.nio.ByteOrder;
 
 public class Receive_Java{
 
-	DatagramSocket socket;
+	final DatagramSocket socket;
+	final int dataSize;
 
-	public Receive_Java(final int port) throws SocketException{
+	public Receive_Java(final int port, final int dataSize) throws SocketException{
 		socket = new DatagramSocket(port);
+		this.dataSize = dataSize;
 	}
 	
 	private void start() throws IOException {
 		System.out.println("-------SERVER READY-------------");
 		
 		while(true){
-			DatagramPacket packet = new DatagramPacket(ByteBuffer.allocate(4).array(), 4);
+			DatagramPacket packet = new DatagramPacket(ByteBuffer.allocate(dataSize).array(), dataSize);
 			
 			socket.receive(packet);
 		
@@ -37,8 +39,10 @@ public class Receive_Java{
 	}
 	
 	public static void main(String[] args) throws Exception {
-		final int PORT = 7777;
-		Receive_Java receiver = new Receive_Java(PORT);
+		final int PORT = Integer.valueOf(args[0]);
+		final int DATA_SIZE = Integer.valueOf(args[1]);
+		
+		Receive_Java receiver = new Receive_Java(PORT, DATA_SIZE);
 		receiver.start();
 	}	
 }

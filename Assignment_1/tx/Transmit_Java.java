@@ -4,7 +4,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -78,7 +77,9 @@ public class Transmit_Java {
 		}
 		
 		Transmit_Java transmitter = new Transmit_Java(NUMBER_OF_PACKETS, PORT, IP);
+		long startTimeStamp = System.currentTimeMillis();
 		transmitter.start();
+		System.out.println("Duration in ms: " + (System.currentTimeMillis()-startTimeStamp));
 	}
 
 }
