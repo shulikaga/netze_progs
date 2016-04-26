@@ -10,10 +10,8 @@
 
 typedef struct{
     int seqNr;
-    char **byteArray;
+    char *byteArray;
 }Packet;
-
-
 
 typedef struct {
     Packet **packets;
@@ -22,6 +20,6 @@ typedef struct {
 }PacketList;
 
 PacketList *newPacketList();
-void addPacket(PacketList *pl,  int receivedSeqNr, char **barray);
+void addPacket(PacketList *pl, char* buffer);
 
 #endif /* Packet_h */
