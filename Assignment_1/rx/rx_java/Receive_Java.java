@@ -67,9 +67,9 @@ public class Receive_Java{
         checksum.update(data, 0, data.length);
         
         if(receivedCrc == checksum.getValue()) {
-            System.err.println("Bist a cooler Typ. Passt. Ready for next transfer.");
+            System.err.println("CRC check ok. Ready for next transfer.");
         } else {
-            System.out.println("Shit!! CRC passt neda. Ready for next transfer");
+            System.out.println("CRC check failed. Ready for next transfer");
         }
         
         receivedSeqNo.clear();

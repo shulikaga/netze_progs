@@ -131,7 +131,10 @@ public class Transmit_Java {
         transmitter.prepareData();
         transmitter.createCRC32();
         transmitter.transfer();
-        System.out.println("Duration in ms: " + (System.currentTimeMillis()-startTimeStamp));
+        long duration = (System.currentTimeMillis()-startTimeStamp);
+        int sizeInBit = NUMBER_OF_PACKETS * DATA_SIZE * 8;	
+        		
+        System.out.println("Speed: " + ((sizeInBit) / 1000)/duration + " mbit/s");
     }
     
     
