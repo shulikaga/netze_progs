@@ -9,7 +9,6 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include "Receiver.h"
-#include "Packet.h"
 
 in_addr_t inet_addr(const char *cp);
 struct sockaddr_in serverAddr, clientAddr;
@@ -17,27 +16,49 @@ struct sockaddr_storage serverStorage;
 socklen_t addr_size, client_addr_size;
 
 
-Receiver* newReceiver(int port, int dataSize, PacketList* packets){
+Receiver* newReceiver(int port, int dataSize){
     Receiver *receiver = (Receiver *) malloc (sizeof (Receiver));
     receiver->port = port;
     receiver->serverTimeout = 1;
-    receiver->pl = packets;
     receiver->dataSize = dataSize;
+    receiver->allocated = 10;
+    receiver->counter = 1;
+    receiver->allPackets = (char **) calloc (receiver->allocated, sizeof (char *));
+    for (int i = 0; i <  receiver->allocated; i++ ){
+        receiver->allPackets[i] = (char*) calloc(dataSize, sizeof(char));
+    }
+
     return  receiver;
 }
+
+void allPacketsDoubleSize(Receiver* receiver){
+    receiver->allocated *= 2;
+    receiver->allPackets = (char **) realloc (receiver->allPackets, receiver->allocated * sizeof (char *));
+    receiver->counter++;
+}
+
+void freeReceiverArrays(Receiver* receiver){
+        for ( int i = 1; i <=  receiver->counter; i++ ){
+            free(receiver->allPackets[i]);
+        }
+        free(receiver->allPackets);
+        free(receiver);
+    
+}
+
 
 void start(Receiver* receiver){
     
     openSocket(receiver);
     
-    PacketList* packets = newPacketList();
-    
     printf("%s\n","-------SERVER READY-------------");
 
     
     while(1){
-        receivePacket(receiver, packets);
+        receivePacket(receiver);
     }
+    
+   // freeReceiverArrays(receiver);
     
 }
 
@@ -60,22 +81,63 @@ void openSocket(Receiver* receiver){
     addr_size = sizeof clientAddr;
 }
 
-void receivePacket(Receiver* receiver, PacketList* packets){
+void receivePacket(Receiver* receiver){
+    //change the size of the array
+    if(receiver->counter==receiver->allocated){
+        allPacketsDoubleSize(receiver);
+    }
+    
     char* client_IP;
-      recvfrom(receiver->udpSocket,
-                                receiver->buffer,
-                                receiver->dataSize,
-                                0,
-                                (struct sockaddr *)&clientAddr,
-                                &addr_size);
     
-    // set ip_address from where the DPackets are coming
-    client_IP =inet_ntoa(clientAddr.sin_addr);
-    printf("client_IP =%s, %c\n ", client_IP, receiver->buffer[10]);
+    //receive the packet
+    recvfrom(receiver->udpSocket,
+               receiver->allPackets[receiver->counter],
+               receiver->dataSize,
+               0,
+               (struct sockaddr *)&clientAddr,
+               &addr_size);
+ 
+    client_IP = inet_ntoa(clientAddr.sin_addr);
+    printf("Received a packet from the IP = %s \n ", client_IP);
+    printData(receiver->allPackets[receiver->counter]);
     
-    
-    addPacket(packets,receiver->buffer);
-    
-    
+    //answer back to the client
+    sendto(receiver->udpSocket,
+           receiver->allPackets[receiver->counter],
+           receiver->dataSize,
+           0,
+           (struct sockaddr *)&clientAddr,
+           addr_size);
+}
 
+
+
+void printData(char* buffer){
+    printf("[");
+    printbinchar(buffer,0, 4);
+    printf(" ");
+    messageToString(buffer, 4, 11);
+    printf("\n");
+    printf("\n");
+
+}
+
+void messageToString(char* buffer, int start, int end){
+    int i;
+    for(i=start;i<end;i++){
+        printf("%c",buffer[i]);
+    }
+}
+
+void printbinchar(char* buffer, int start, int end){
+    int i;
+    for(i=start;i<end;i++){
+        printf(" ");
+        char c = buffer[i];
+        for(int j = 7; 0 <= j; j --){
+            printf("%d", (c >> j) & 0x01);
+        }
+        
+        
+    }
 }

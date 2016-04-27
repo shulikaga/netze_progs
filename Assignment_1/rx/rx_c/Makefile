@@ -1,7 +1,7 @@
 CFLAGS=-Wall
 
 PROGRAMS= RX
-OBJECTS= Packet.o Receiver.o 
+OBJECTS= Receiver.o 
 ALLOBJECTS=$(OBJECTS) $(patsubst %,%.o,$(PROGRAMS))
 
 default: $(PROGRAMS)
