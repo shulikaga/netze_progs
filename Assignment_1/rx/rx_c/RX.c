@@ -13,9 +13,9 @@ int main(int argc, char *argv[]){
     int port = 7777;
     int dataSize = 4;
     
-    if (argc == 2){
-        port = atoi(argv[0]);
-        dataSize = atoi(argv[1]);
+    if (argc == 3){
+        port = atoi(argv[1]);
+        dataSize = atoi(argv[2]);
     }
     
     Receiver* receiver = newReceiver(port, dataSize);

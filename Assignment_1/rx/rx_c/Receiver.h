@@ -33,6 +33,8 @@ void freeReceiverArrays(Receiver* receiver);
 void start(Receiver* receiver);
 void openSocket(Receiver* receiver);
 void receivePacket(Receiver* receiver);
+void get4Bytes(Receiver* receiver, char* buffer, int packetNumber, int start);
+void checkCRC32(Receiver* receiver,char* receivedLastPacket, int packetNumber, int start);
 
 void printData(char* buffer);
 void messageToString(char* buffer, int start, int end);

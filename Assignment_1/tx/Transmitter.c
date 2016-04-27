@@ -4,10 +4,11 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
+#include <zlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-
+#include "crc32.h"
 #include "Transmitter.h"
 
 in_addr_t inet_addr(const char *cp);
@@ -94,9 +95,23 @@ void sendPackets(Transmitter* transmitter){
     }
 }
 
-void putCRC32(Transmitter* transmitter,char* buffer, int packetNumber, int start){
-       //TODO
+void putCRC32(Transmitter* transmitter,char** allData, int packetNumber, int start){
+    char* tmp_byteArray = (char*)calloc(transmitter->dataSize*transmitter->numberOfPackets,sizeof(char));
+    int bitCounter = 0;
+    for(int i = 1;i<=transmitter->numberOfPackets;i++){
+        for(int j = 0;j<transmitter->dataSize;j++){
+            tmp_byteArray[bitCounter] = transmitter->allPackets[i][j];
+            bitCounter++;
+        }
+    }
     
+    gen_crc_table();
+    
+    // Compute and output CRC
+    int crc32 = update_crc(-1, tmp_byteArray, sizeof(allData));
+    
+    get4Bytes(transmitter,transmitter->allPackets[transmitter->numberOfPackets], crc32,transmitter->dataSize-4);
+    printf("The checksum crc32 to send = %08X =", crc32);
 }
 
 void sendOnePacket(Transmitter* transmitter, int packetNr, int times,int numberOfPackets ){
@@ -104,7 +119,9 @@ void sendOnePacket(Transmitter* transmitter, int packetNr, int times,int numberO
    
     //check for the last paket to send
     if(packetNr == numberOfPackets){
-        putCRC32(transmitter, transmitter->allPackets[packetNr],packetNr,(200-5 ));
+        putCRC32(transmitter, transmitter->allPackets,packetNr,(200-5 ));
+        printbinchar(transmitter->allPackets[transmitter->numberOfPackets], transmitter->dataSize-4, transmitter->dataSize);
+        printf("\n");
     }
     
     //send

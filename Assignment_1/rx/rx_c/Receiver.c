@@ -9,6 +9,7 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include "Receiver.h"
+#include "crc32.h"
 
 in_addr_t inet_addr(const char *cp);
 struct sockaddr_in serverAddr, clientAddr;
@@ -24,7 +25,7 @@ Receiver* newReceiver(int port, int dataSize){
     receiver->allocated = 10;
     receiver->counter = 1;
     receiver->allPackets = (char **) calloc (receiver->allocated, sizeof (char *));
-    for (int i = 0; i <  receiver->allocated; i++ ){
+    for (int i = 1; i <  receiver->allocated; i++ ){
         receiver->allPackets[i] = (char*) calloc(dataSize, sizeof(char));
     }
 
@@ -58,7 +59,7 @@ void start(Receiver* receiver){
         receivePacket(receiver);
     }
     
-   // freeReceiverArrays(receiver);
+    freeReceiverArrays(receiver);
     
 }
 
@@ -101,6 +102,11 @@ void receivePacket(Receiver* receiver){
     printf("Received a packet from the IP = %s \n ", client_IP);
     printData(receiver->allPackets[receiver->counter]);
     
+    if( (receiver->allPackets[receiver->counter])[receiver->dataSize-4]!='\0'){
+    
+        checkCRC32(receiver,receiver->allPackets[receiver->counter], receiver->counter, receiver->dataSize-4);
+    }
+    
     //answer back to the client
     sendto(receiver->udpSocket,
            receiver->allPackets[receiver->counter],
@@ -111,6 +117,54 @@ void receivePacket(Receiver* receiver){
 }
 
 
+void checkCRC32(Receiver* receiver,char* receivedLastPacket, int packetNumber, int start){
+    
+    char* tmp_byteArray = (char*)calloc(receiver->dataSize*receiver->counter,sizeof(char));
+    int bitCounter = 0;
+    for(int i = 1;i<receiver->counter;i++){
+        for(int j = 0;j<receiver->dataSize;j++){
+            tmp_byteArray[bitCounter] = receiver->allPackets[i][j];
+            bitCounter++;
+        }
+    }
+    tmp_byteArray[bitCounter-4] = '\0';
+    tmp_byteArray[bitCounter-3] = '\0';
+    tmp_byteArray[bitCounter-2] = '\0';
+    tmp_byteArray[bitCounter-1] = '\0';
+    
+    gen_crc_table();
+    
+    // Compute and output CRC
+    int crc32 = update_crc(-1, tmp_byteArray, sizeof(receivedLastPacket));
+    
+    char* checksum_array = (char*)calloc(4,sizeof(char));
+    get4Bytes(receiver,checksum_array, crc32,0);
+    printf("The checksum crc32 calculated in Receiver = %08X =", crc32);
+    printbinchar(checksum_array,0,4);
+    printf("\n");
+    
+    int boolCRC32 = 1;
+    for(int i = 0;i<4;i++){
+        if((receiver->allPackets[receiver->counter])[receiver->dataSize-4+i]!= checksum_array[i]){
+            boolCRC32 = 0;
+        }
+    }
+    
+    if(boolCRC32==1){
+        printf("The checksums are identical!");
+    }else{
+        printf("Tha checksums are not identicel!");
+    }
+    free(tmp_byteArray);
+    free(checksum_array);
+}
+
+void get4Bytes(Receiver* receiver, char* buffer, int packetNumber, int start){
+    buffer[start] = (packetNumber >> 24) & 0xFF;
+    buffer[start + 1] = (packetNumber >> 16) & 0xFF;
+    buffer[start + 2] = (packetNumber >> 8) & 0xFF;
+    buffer[start + 3] = packetNumber & 0xFF;
+}
 
 void printData(char* buffer){
     printf("[");

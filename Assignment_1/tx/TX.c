@@ -13,11 +13,11 @@ struct timeval startTimeStamp,stopTimeStamp;
         char* ip = "127.0.0.1";
         int dataSize = 4;
         
-        if (argc == 4){
-            numberOfPackets = atoi(argv[0]);
-            port = atoi(argv[1]);
-            ip = argv[2];
-            dataSize = atoi(argv[3]);
+        if (argc == 5){
+            numberOfPackets = atoi(argv[1]);
+            port = atoi(argv[2]);
+            ip = argv[3];
+            dataSize = atoi(argv[4]);
          }
         
         Transmitter* transmitter = newTransmitter(numberOfPackets, port, ip, dataSize);

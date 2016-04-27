@@ -1,7 +1,7 @@
 CFLAGS=-Wall
 
 PROGRAMS= RX
-OBJECTS= Receiver.o 
+OBJECTS= Receiver.o, crc32.o 
 ALLOBJECTS=$(OBJECTS) $(patsubst %,%.o,$(PROGRAMS))
 
 default: $(PROGRAMS)
