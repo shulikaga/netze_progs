@@ -1,7 +1,7 @@
 CFLAGS=-Wall
 
 PROGRAMS= TX
-OBJECTS= Transmitter.o, crc32.o
+OBJECTS= Transmitter.o crc32.o
 ALLOBJECTS=$(OBJECTS) $(patsubst %,%.o,$(PROGRAMS))
 
 default: $(PROGRAMS)

@@ -96,9 +96,9 @@ void sendPackets(Transmitter* transmitter){
 }
 
 void putCRC32(Transmitter* transmitter,char** allData, int packetNumber, int start){
-    char* tmp_byteArray = (char*)calloc(transmitter->dataSize*transmitter->numberOfPackets,sizeof(char));
+    char* tmp_byteArray = (char*)calloc(transmitter->dataSize*(transmitter->numberOfPackets+1),sizeof(char));
     int bitCounter = 0;
-    for(int i = 1;i<=transmitter->numberOfPackets;i++){
+    for(int i = 1;i <= transmitter->numberOfPackets;i++){
         for(int j = 0;j<transmitter->dataSize;j++){
             tmp_byteArray[bitCounter] = transmitter->allPackets[i][j];
             bitCounter++;

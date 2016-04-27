@@ -119,9 +119,9 @@ void receivePacket(Receiver* receiver){
 
 void checkCRC32(Receiver* receiver,char* receivedLastPacket, int packetNumber, int start){
     
-    char* tmp_byteArray = (char*)calloc(receiver->dataSize*receiver->counter,sizeof(char));
+    char* tmp_byteArray = (char*)calloc(receiver->dataSize*(receiver->counter+1),sizeof(char));
     int bitCounter = 0;
-    for(int i = 1;i<receiver->counter;i++){
+    for(int i = 1;i<=receiver->counter;i++){
         for(int j = 0;j<receiver->dataSize;j++){
             tmp_byteArray[bitCounter] = receiver->allPackets[i][j];
             bitCounter++;
