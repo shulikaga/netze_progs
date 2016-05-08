@@ -4,6 +4,7 @@
 *.obj
 *.elf
 
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -33,3 +34,4 @@
 
 .DS_Store
 bin/Transmit
+.metadata/
