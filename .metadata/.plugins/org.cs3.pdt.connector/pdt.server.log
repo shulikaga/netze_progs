@@ -1,0 +1,135 @@
+---------------------------------
+Sun May 08 11:53:47 CEST 2016
+---------------------------------
+% /Users/mrm/.plrc compiled 0.00 sec, 2 clauses
+% The graphical front-end will be used for subsequent tracing
+%   library(socket) compiled into socket 0.00 sec, 28 clauses
+%   library(charsio) compiled into charsio 0.00 sec, 21 clauses
+%  /private/var/folders/tx/drs8b8fj1kg02vmz_8gk77p00000gn/T/consult_server.pl compiled into consult_server 0.01 sec, 185 clauses
+%   split_file_path compiled into split_file_path 0.00 sec, 2 clauses
+%    library(memfile) compiled into memory_file 0.00 sec, 20 clauses
+%       library(record) compiled into record 0.00 sec, 69 clauses
+%       library(prolog_metainference) compiled into prolog_metainference 0.00 sec, 47 clauses
+%      library(prolog_codewalk) compiled into prolog_codewalk 0.01 sec, 348 clauses
+%     library(check) compiled into check 0.02 sec, 420 clauses
+%    library(make) compiled into make 0.02 sec, 435 clauses
+%   pdt_reload compiled into pdt_reload 0.02 sec, 491 clauses
+%   lgt/loader compiled 0.00 sec, 4 clauses
+%  /Applications/Eclipse.app/Contents/Eclipse/plugins/org.cs3.pdt.connector_3.1.2.201507021934/pl/load.pl compiled 0.02 sec, 507 clauses
+%    pdt_meta_specification compiled into pdt_meta_specification 0.00 sec, 24 clauses
+%      pdt_support compiled into pdt_support 0.00 sec, 15 clauses
+%     pdt_prolog_library(utils4modules_visibility) compiled into utils4modules_visibility 0.00 sec, 43 clauses
+%     pdt_prolog_library(lists) compiled into ctc_lists 0.00 sec, 63 clauses
+%    pdt_prolog_metainference compiled into pdt_prolog_metainference 0.01 sec, 267 clauses
+%   metainference/load compiled 0.01 sec, 298 clauses
+%     pdt_prolog_codewalk compiled into pdt_prolog_codewalk 0.01 sec, 295 clauses
+%     pdt_prolog_library(compatibility) compiled into compatibility 0.00 sec, 5 clauses
+%    pdt_call_graph compiled into pdt_call_graph 0.01 sec, 334 clauses
+%     pdt_common_pl(pdt_entry_points) compiled into pdt_entry_points 0.00 sec, 5 clauses
+%     pdt_common_pl(properties) compiled into properties 0.00 sec, 9 clauses
+Warning: /Applications/Eclipse.app/Contents/Eclipse/plugins/org.cs3.pdt.common_3.1.2.201507021934/pl/callgraph/pdt_call_analysis.pl:56:
+	Singleton-marked variables appearing more than once: [_Kind]
+%    pdt_call_analysis compiled into pdt_call_analysis 0.00 sec, 58 clauses
+%    pdt_call_hierarchy compiled into pdt_call_hierarchy 0.00 sec, 12 clauses
+%   callgraph/load compiled 0.02 sec, 414 clauses
+%    library(helpidx) compiled into help_index 0.03 sec, 1,646 clauses
+%    library(pldoc/doc_library) compiled into pldoc_library 0.00 sec, 22 clauses
+%    library(explain) compiled into prolog_explain 0.00 sec, 61 clauses
+%    library(help) compiled into online_help 0.00 sec, 66 clauses
+%    library(pldoc) compiled into pldoc 0.06 sec, 1,084 clauses
+%     library(uri) compiled into uri 0.01 sec, 85 clauses
+%      library(sgml) compiled into sgml 0.01 sec, 214 clauses
+%        library(pure_input) compiled into pure_input 0.01 sec, 35 clauses
+%       library(quasi_quotations) compiled into quasi_quotations 0.01 sec, 71 clauses
+%      html_quasiquotations compiled into html_quasi_quotations 0.01 sec, 91 clauses
+%     library(http/html_write) compiled into html_write 0.06 sec, 731 clauses
+%      library(time) compiled into time 0.00 sec, 42 clauses
+%      library(http/mimetype) compiled into mimetype 0.00 sec, 68 clauses
+%          library(rbtrees) compiled into rbtrees 0.02 sec, 243 clauses
+%         library(thread_pool) compiled into thread_pool 0.03 sec, 308 clauses
+%            library(utf8) compiled into utf8 0.00 sec, 12 clauses
+%           library(url) compiled into url 0.02 sec, 389 clauses
+%           library(dcg/basics) compiled into dcg_basics 0.01 sec, 115 clauses
+%           http_exception compiled into http_exception 0.00 sec, 25 clauses
+%           mimepack compiled into mime_pack 0.00 sec, 28 clauses
+%          http_header compiled into http_header 0.07 sec, 1,125 clauses
+%          http_stream compiled into http_stream 0.01 sec, 42 clauses
+%         http_wrapper compiled into httpd_wrapper 0.09 sec, 1,271 clauses
+%        library(http/thread_httpd) compiled into thread_httpd 0.13 sec, 1,729 clauses
+%       library(http/http_host) compiled into http_host 0.14 sec, 1,760 clauses
+%      library(http/http_path) compiled into http_path 0.15 sec, 1,828 clauses
+%     library(http/http_dispatch) compiled into http_dispatch 0.19 sec, 2,136 clauses
+%       library(oset) compiled into oset 0.00 sec, 72 clauses
+%      library(ordsets) compiled into ordsets 0.01 sec, 173 clauses
+%      library(assoc) compiled into assoc 0.01 sec, 143 clauses
+%      library(ugraphs) compiled into ugraphs 0.01 sec, 124 clauses
+%     library(http/html_head) compiled into html_head 0.04 sec, 586 clauses
+%       http_client compiled into http_client 0.01 sec, 119 clauses
+%        library(mime) compiled into mime 0.00 sec, 14 clauses
+%       http_mime_plugin compiled into http_mime_plugin 0.00 sec, 33 clauses
+%       http_hook compiled into http_hook 0.00 sec, 4 clauses
+%      library(http/http_parameters) compiled into http_parameters 0.02 sec, 257 clauses
+%      library(www_browser) compiled into www_browser 0.01 sec, 47 clauses
+%        library(prolog_xref) compiled into prolog_xref 0.05 sec, 670 clauses
+%         library(dialect/swi/syspred_options) compiled into prolog_system_predicate_options 0.00 sec, 123 clauses
+%        library(predicate_options) compiled into predicate_options 0.03 sec, 301 clauses
+%        library(pce_meta) compiled into pce_meta 0.01 sec, 93 clauses
+%       library(prolog_colour) compiled into prolog_colour 0.13 sec, 1,865 clauses
+%       doc_colour compiled into pldoc_colours 0.00 sec, 15 clauses
+%      pldoc(doc_htmlsrc) compiled into pldoc_htmlsrc 0.15 sec, 2,073 clauses
+%       doc_search compiled into pldoc_search 0.01 sec, 136 clauses
+%       doc_util compiled into doc_util 0.00 sec, 17 clauses
+%      pldoc(doc_index) compiled into pldoc_index 0.03 sec, 324 clauses
+%       library(filesex) compiled into files_ex 0.01 sec, 56 clauses
+%       library(xpath) compiled into xpath 0.01 sec, 112 clauses
+%      pldoc(doc_man) compiled into pldoc_man 0.03 sec, 469 clauses
+%      pldoc(doc_access) compiled into doc_access 0.00 sec, 33 clauses
+%        library(process) compiled into process 0.01 sec, 60 clauses
+%         library(base64) compiled into base64 0.00 sec, 86 clauses
+%        library(http/http_open) compiled into http_open 0.02 sec, 298 clauses
+%        library(archive) compiled into archive 0.01 sec, 43 clauses
+%       library(prolog_pack) compiled into prolog_pack 0.07 sec, 905 clauses
+%      pldoc(doc_pack) compiled into pldoc_pack 0.08 sec, 950 clauses
+%     library(doc_http) compiled into pldoc_http 0.34 sec, 4,358 clauses
+%    library(pldoc/doc_html) compiled into pldoc_html 0.68 sec, 8,477 clauses
+%       count compiled into count 0.00 sec, 12 clauses
+%      files compiled into ctc_util_files 0.00 sec, 51 clauses
+%     logging compiled into logging 0.01 sec, 93 clauses
+%     database compiled into database 0.00 sec, 5 clauses
+%    pdt_prolog_library(utils4modules) compiled into utils4modules 0.01 sec, 125 clauses
+%   pdt_manual_entry compiled into pdt_manual_entry 0.79 sec, 11,526 clauses
+%   xref/pdt_xref compiled into pdt_xref 0.00 sec, 24 clauses
+%   pdt_search compiled into pdt_search 0.01 sec, 130 clauses
+%   source_files compiled into source_files 0.00 sec, 8 clauses
+%   pdt_common_reload_hook compiled into pdt_common_reload_hook 0.00 sec, 3 clauses
+%   lgt/loader compiled 0.00 sec, 4 clauses
+%  /Applications/Eclipse.app/Contents/Eclipse/plugins/org.cs3.pdt.common_3.1.2.201507021934/pl/load.pl compiled 0.84 sec, 12,434 clauses
+%    util_for_graphML compiled into util_for_graphML 0.00 sec, 23 clauses
+%   graphML_api compiled into graphML_api 0.01 sec, 68 clauses
+%   pl_to_graphML compiled into pl_to_graphML 0.00 sec, 66 clauses
+%   lgt/loader compiled 0.00 sec, 4 clauses
+%  /Applications/Eclipse.app/Contents/Eclipse/plugins/org.cs3.pdt.graphicalviews_3.1.2.201507021934/pl/load.pl compiled 0.01 sec, 148 clauses
+%   compatiblitySWI compiled 0.00 sec, 52 clauses
+%    general compiled into general 0.00 sec, 17 clauses
+%   database_cache compiled into database_cache 0.00 sec, 181 clauses
+%   contains compiled into contains 0.00 sec, 8 clauses
+%   listing compiled into listing 0.00 sec, 10 clauses
+%   time compiled into ctc_time 0.00 sec, 17 clauses
+%    library(plunit) compiled into plunit 0.03 sec, 400 clauses
+%   junitadapter compiled into junitadapter 0.03 sec, 418 clauses
+%  /Applications/Eclipse.app/Contents/Eclipse/plugins/org.cs3.prolog.library_3.1.2.201507021934/pl/_load.pl compiled 0.04 sec, 716 clauses
+%    pdt_editor_breakpoints compiled into pdt_editor_breakpoints 0.00 sec, 12 clauses
+%    pdt_editor_highlighting compiled into pdt_editor_highlighting 0.00 sec, 13 clauses
+%    pdt_editor_files compiled into pdt_editor_files 0.00 sec, 3 clauses
+%    lgt/loader compiled 0.00 sec, 4 clauses
+%      library(swi_edit) compiled into pce_nedit 0.00 sec, 20 clauses
+%     library(edit) compiled into prolog_edit 0.01 sec, 152 clauses
+%    pdt_editor_edit_hook compiled into pdt_editor_edit_hook 0.01 sec, 159 clauses
+%   editor/load compiled 0.02 sec, 208 clauses
+%   pdt_smells compiled into pdt_smells 0.00 sec, 2 clauses
+%  /Applications/Eclipse.app/Contents/Eclipse/plugins/org.cs3.pdt.editor_3.1.2.201507021934/pl/load.pl compiled 0.02 sec, 217 clauses
+%   pdt_console_server compiled into pdt_console_server 0.00 sec, 23 clauses
+%  /Applications/Eclipse.app/Contents/Eclipse/plugins/org.cs3.pdt.console_3.1.2.201507021934/pl/loader.pl compiled 0.00 sec, 27 clauses
+%   prolog_analysis_api compiled into prolog_analysis_api 0.00 sec, 10 clauses
+%  /Applications/Eclipse.app/Contents/Eclipse/plugins/org.cs3.pdt.analysis_3.1.2.201507021934/pl/load.pl compiled 0.00 sec, 14 clauses
+% /private/var/folders/tx/drs8b8fj1kg02vmz_8gk77p00000gn/T/socketProcess8936681605672838046.tmp compiled 1.12 sec, 17,455 clauses

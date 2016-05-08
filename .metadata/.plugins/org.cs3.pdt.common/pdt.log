@@ -1,0 +1,13 @@
+pdt: ----------------------------------
+pdt: Sun May 08 11:50:57 CEST 2016
+pdt: ----------------------------------
+pdt: set debug output to LOGFILE
+pdt: ----------------------------------
+pdt: Sun May 08 11:50:57 CEST 2016
+pdt: ----------------------------------
+pdt: set debug output to LOGFILE
+pdt: WARNING - 08/05 11:53:49 - Prolog Process Default Process Work: Prolog warnings and errors during initialization:
+Location: /Applications/Eclipse.app/Contents/Eclipse/plugins/org.cs3.pdt.common_3.1.2.201507021934/pl/callgraph/pdt_call_analysis.pl:56
+Message: Singleton-marked variables appearing more than once: [_Kind]
+
+
