@@ -27,17 +27,20 @@ public class Transmit_Java {
     private final int port;
     private final String ip;
     private final int dataSize;
+    private final int windowSize;
     
+    private int roundTripTime = 250;
     private byte[] data; // this array holds all data we want to transfer
     private long checksum; // holds CRC32 checksum
     
     public Transmit_Java(final int numPackets, int port, String ip, int dataSize) throws SocketException {
         this.numPackets = numPackets;
         socket = new DatagramSocket();
-        socket.setSoTimeout(250);
+        socket.setSoTimeout(roundTripTime);
         this.port = port;
         this.ip = ip;
         this.dataSize = dataSize;
+        windowSize = 8;
     }
     
     public void prepareData() {
@@ -55,27 +58,50 @@ public class Transmit_Java {
     }
     
     public void transfer() throws IOException {
-        // send all data
-        for (int i = 0; i < numPackets; i++) {
-            boolean send = true;
-            while (send) {
-                sendPacket(i);
-                try {
-                    receiveAck(i);
-                    send = false;
+        // send first windowsize-1 datapackets
+    	for (int i = 0; i < windowSize-1; i++) {
+    	sendPacket(i);
+    	}
+    	// create window and a counter
+    	boolean[] window = new boolean[windowSize];
+    	int count = windowSize-1; // number of packets in the window that have no ack (-1 because we start as like before shifting)
+    	
+    	// send rest of the data
+    	for (int i = windowSize-1; i < numPackets + windowSize-1; i++) {
+    		if(i < numPackets){
+    			sendPacket(i);
+    		}
+    		//"shift" window
+    		window[i % windowSize] = false; 
+    		count++;
+    		int leftmost = (i-(windowSize-1)) % windowSize;
+    		
+    		// was the first packet in the window sent again?
+    	    boolean resent = false;
+    	    
+    		while(!window[leftmost]){
+    			if(!resent){socket.setSoTimeout((roundTripTime/windowSize)*count);}
+    			try {
+                    int seqNmb = receiveAck();
+                    window[(seqNmb-1) % windowSize] = true;
+                    count--;
                 }
                 catch (SocketTimeoutException e){
-                    System.out.println("No Ack for " + i + " received. Trying again.");
+                    System.out.println("No Ack for " + (i-(windowSize-1)) + " received. Trying again.");
+                    sendPacket((i-(windowSize-1)));
+                    socket.setSoTimeout(roundTripTime);
+                    resent = true;
                 }
-            }
-        }
+    		}	
+    	}
+
         // send CRC32 checksum
         sendCRC32();
         socket.close();
     }
     
-    
-    private void sendCRC32() throws IOException {
+
+	private void sendCRC32() throws IOException {
         byte[] crcPacket = ByteBuffer.allocate(dataSize + 8).putInt(0).putLong(checksum).order(ByteOrder.BIG_ENDIAN).array();
         System.out.println("crc is: " + checksum);
         boolean send = true;
@@ -91,6 +117,16 @@ public class Transmit_Java {
             }
         }
         
+    }
+    
+    private int receiveAck() throws IOException {
+        DatagramPacket packet = new DatagramPacket(ByteBuffer.allocate(dataSize).array(), dataSize);
+        
+        socket.receive(packet);
+        
+        final int seqNmb = ByteBuffer.wrap(packet.getData()).order(ByteOrder.BIG_ENDIAN).getInt();
+        System.out.println("Packet Ack received: " + seqNmb);
+        return seqNmb;
     }
     
     private void receiveAck(int i) throws IOException {
@@ -119,7 +155,7 @@ public class Transmit_Java {
         int NUMBER_OF_PACKETS = 10000;
         int PORT = 7777;
         String IP = "127.0.0.1";
-        int DATA_SIZE = 4;
+        int DATA_SIZE = 128;
         
         if (args.length == 4){
             NUMBER_OF_PACKETS = Integer.valueOf(args[0]);
