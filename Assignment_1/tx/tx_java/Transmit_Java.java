@@ -1,5 +1,7 @@
 package tx_java;
 
+
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -40,7 +42,7 @@ public class Transmit_Java {
         this.port = port;
         this.ip = ip;
         this.dataSize = dataSize;
-        windowSize = 8;
+        windowSize = 10;
     }
     
     public void prepareData() {
@@ -80,14 +82,16 @@ public class Transmit_Java {
     	    boolean resent = false;
     	    
     		while(!window[leftmost]){
-    			if(!resent){socket.setSoTimeout((roundTripTime/windowSize)*count);}
+    			if(!resent){socket.setSoTimeout(((roundTripTime/windowSize)*count)+1);}
     			try {
-                    int seqNmb = receiveAck();
-                    window[(seqNmb-1) % windowSize] = true;
-                    count--;
+                    int seqNmb = receiveAck(); // our seqNmbs start with "1"!!
+                    if(seqNmb > i-windowSize ){ // for the case, that an ack from a resent packet comes very late after all  
+                    	window[(seqNmb-1) % windowSize] = true;
+                        count--;
+    					}
                 }
                 catch (SocketTimeoutException e){
-                    System.out.println("No Ack for " + (i-(windowSize-1)) + " received. Trying again.");
+                    System.out.println("No Ack for " + (i-(windowSize-2)) + " received. Trying again.");
                     sendPacket((i-(windowSize-1)));
                     socket.setSoTimeout(roundTripTime);
                     resent = true;
@@ -172,7 +176,7 @@ public class Transmit_Java {
         long duration = (System.currentTimeMillis()-startTimeStamp);
         int sizeInBit = NUMBER_OF_PACKETS * DATA_SIZE * 8;	
         		
-        System.out.println("Speed: " + ((sizeInBit) / 1000)/duration + " mbit/s");
+        System.out.println("Speed: " + ((sizeInBit) / 1000.0)/duration + " mbit/s");
     }
     
     

@@ -1,3 +1,4 @@
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -64,7 +65,10 @@ public class Receive_Java{
         byte[] data = allData.array();
         
         Checksum checksum = new CRC32();
+        
         checksum.update(data, 0, data.length);
+        
+        System.out.println("CRC generated from received data: " + checksum.getValue());
         
         if(receivedCrc == checksum.getValue()) {
             System.err.println("CRC check ok. Ready for next transfer.");
