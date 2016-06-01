@@ -30,19 +30,19 @@ public class Transmit_Java {
     private final String ip;
     private final int dataSize;
     private final int windowSize;
-    
-    private int roundTripTime = 250;
+    private int roundTripTime;
     private byte[] data; // this array holds all data we want to transfer
     private long checksum; // holds CRC32 checksum
     
-    public Transmit_Java(final int numPackets, int port, String ip, int dataSize) throws SocketException {
+    public Transmit_Java(final int numPackets, int port, String ip, int dataSize, int windowSize, int roundTripTime) throws SocketException {
         this.numPackets = numPackets;
         socket = new DatagramSocket();
-        socket.setSoTimeout(roundTripTime);
         this.port = port;
         this.ip = ip;
         this.dataSize = dataSize;
-        windowSize = 10;
+        this.windowSize = windowSize;
+        this.roundTripTime = roundTripTime;
+        socket.setSoTimeout(roundTripTime);
     }
     
     public void prepareData() {
@@ -160,15 +160,19 @@ public class Transmit_Java {
         int PORT = 7777;
         String IP = "127.0.0.1";
         int DATA_SIZE = 128;
+        int WINDOW_SIZE = 10;
+        int ROUND_TRIP_TIME = 25;
         
-        if (args.length == 4){
+        if (args.length == 6){
             NUMBER_OF_PACKETS = Integer.valueOf(args[0]);
             PORT = Integer.valueOf(args[1]);
             IP = args[2];
             DATA_SIZE = Integer.valueOf(args[3]);
+            WINDOW_SIZE = Integer.valueOf(args[4]);
+            ROUND_TRIP_TIME = Integer.valueOf(args[5]);
         }
         
-        Transmit_Java transmitter = new Transmit_Java(NUMBER_OF_PACKETS, PORT, IP, DATA_SIZE);
+        Transmit_Java transmitter = new Transmit_Java(NUMBER_OF_PACKETS, PORT, IP, DATA_SIZE, WINDOW_SIZE, ROUND_TRIP_TIME);
         long startTimeStamp = System.currentTimeMillis();
         transmitter.prepareData();
         transmitter.createCRC32();
